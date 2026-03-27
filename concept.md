@@ -119,11 +119,39 @@ La curva di mutazione e il grafo insieme sono immediatamente comprensibili da ch
 
 ---
 
+## Stack tecnico e partner
+
+| Layer | Tecnologia | Perché |
+| --- | --- | --- |
+| LLM (agenti debate) | **Regolo.ai** — Llama-3.3-70B-Instruct | EU-hosted, zero data retention, GDPR-compliant. Critico per il contesto difesa/intelligence. |
+| Embeddings semantici | **Regolo.ai** — modello embedding | Semantic similarity reale per mutation tracking, più accurato di TF-IDF |
+| Web search | Serper API | Google search programmatica, geolocalizzata in italiano |
+| Frontend | Next.js + Tailwind + vis-network + recharts | Rapid prototyping, visualizzazioni pronte |
+| TTS verdetto | **ElevenLabs** — eleven_multilingual_v2 | Lettura audio del verdetto — momento impatto massimo nel pitch |
+
+### Perché Regolo.ai è la scelta giusta per Rheinmetall
+
+Truth Engine usa **Regolo.ai** come provider LLM principale invece di servizi cloud americani. Questo non è una scelta casuale — è una dichiarazione strategica:
+
+- **Zero data retention**: ogni notizia analizzata, ogni query, sparisce dopo l'elaborazione. Nessun dato sensibile viene conservato dal provider.
+- **Datacenter EU (Italia)**: le analisi restano in Europa. Conformità GDPR nativa, non aggiuntiva.
+- **Sovranità digitale**: per un'istituzione di difesa come Rheinmetall, affidare l'analisi di information warfare a un provider americano che conserva i dati è un rischio operativo. Regolo.ai risolve questo problema alla radice.
+
+Nel pitch: *"Abbiamo scelto Regolo.ai perché Truth Engine è progettato per chi non può permettersi che le proprie analisi vengano conservate da terzi. Privacy by design, non privacy by policy."*
+
+### Perché ElevenLabs nel pitch
+
+Il momento in cui una voce AI legge ad alta voce *"Verdetto: FUORVIANTE — confidenza 74%"* davanti alla giuria è il momento più memorabile della demo. ElevenLabs con `eleven_multilingual_v2` produce audio italiano naturale che trasforma il verdetto da testo a dichiarazione. Non è solo un effetto scenografico: in un contesto istituzionale reale, la sintesi vocale dei report è una feature standard per chi non può leggere report scritti in tempo reale (briefing operativi, sala situazione).
+
+---
+
 ## Perché questo è rilevante per Rheinmetall
 
 Rheinmetall è un'azienda della difesa. Nel contesto della difesa, la disinformazione non è solo un problema sociale — è una **minaccia strategica**. Le operazioni di information warfare, la manipolazione dell'opinione pubblica in contesti di conflitto, la diffusione di notizie false su sistemi d'arma o decisioni politiche: tutto questo richiede strumenti che vadano oltre il semplice vero/falso.
 
 Un sistema che traccia la propagazione e la mutazione delle notizie, che identifica le tecniche di manipolazione usate, che stima il rischio di viralità prima che il danno sia fatto, e che produce un'analisi strutturata e motivata è molto più utile in contesti di intelligence e analisi strategica rispetto a un semplice classificatore binario.
+
+**Il vantaggio aggiuntivo**: l'intera infrastruttura AI di Truth Engine gira su Regolo.ai — provider italiano, EU-hosted, zero data retention. Per Rheinmetall, questo significa che lo strumento è deployabile in contesti operativi sensibili senza violare policy di sicurezza sui dati. Non è un dettaglio — è un prerequisito per l'adozione istituzionale.
 
 Questo angolo va esplicitato nel pitch: Truth Engine non è uno strumento per i cittadini curiosi — è infrastruttura per chi ha il compito di proteggere l'integrità dell'informazione in contesti critici.
 
@@ -151,7 +179,7 @@ Incolla una notizia reale — trovata questa mattina, mai vista prima. Mostra il
 "Questa notizia ha un Virality Risk Score di 78/100. Se fosse falsa, in 4 ore avrebbe già raggiunto una diffusione critica — prima che qualsiasi smentita potesse contenerla. Questo grafo mostra esattamente il momento in cui ha smesso di essere giornalismo." (indicare il punto sul grafo)
 
 **1:40 → 2:00 — Chiusura**
-"Non stiamo costruendo un rilevatore di fake news. Stiamo costruendo uno strumento per capire come funziona la manipolazione dell'informazione — e per intercettarla prima che faccia danno. Questo è utile per chiunque: cittadini, giornalisti, istituzioni, e chi ha il compito di proteggere l'integrità dell'informazione in contesti critici."
+"Non stiamo costruendo un rilevatore di fake news. Stiamo costruendo uno strumento per capire come funziona la manipolazione dell'informazione — e per intercettarla prima che faccia danno. L'intera pipeline AI gira su Regolo.ai: EU-hosted, zero data retention — perché uno strumento di difesa non può permettersi di leggere dati sensibili ad un provider estero. Questo è utile per chi ha il compito di proteggere l'integrità dell'informazione in contesti critici."
 
 ---
 

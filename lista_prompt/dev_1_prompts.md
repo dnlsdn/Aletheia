@@ -55,7 +55,7 @@ Project structure:
 Install these dependencies: express, dotenv, axios, cors
 
 Create a .env file with these fields (leave values empty for now):
-ANTHROPIC_API_KEY=
+REGOLO_API_KEY=
 SERPER_API_KEY=
 PORT=3001
 
@@ -103,20 +103,23 @@ At the bottom, add a self-test block that only runs when this file is executed d
 ```
 In the existing project, create /src/agents/debate.js.
 
-This module implements two opposing AI agents using the Anthropic API (model: claude-sonnet-4-6).
+This module implements two opposing AI agents using the Regolo.ai API (OpenAI-compatible,
+model: Llama-3.3-70B-Instruct). Regolo.ai is an EU-hosted, zero-data-retention LLM provider.
 
-Anthropic API call structure:
-- URL: <https://api.anthropic.com/v1/messages>
+Regolo.ai API call structure:
+- URL: https://api.regolo.ai/v1/chat/completions
 - Method: POST
 - Headers:
-    "x-api-key": process.env.ANTHROPIC_API_KEY
-    "anthropic-version": "2023-06-01"
+    "Authorization": "Bearer " + process.env.REGOLO_API_KEY
     "Content-Type": "application/json"
 - Body:
-    model: "claude-sonnet-4-6"
+    model: "Llama-3.3-70B-Instruct"
     max_tokens: 800
-    system: (the agent's system prompt)
-    messages: [{ role: "user", content: (the news + sources) }]
+    messages: [
+      { role: "system", content: (the agent's system prompt) },
+      { role: "user", content: (the news + sources) }
+    ]
+- Response: the text is at response.choices[0].message.content
 
 Implement and export two async functions:
 
@@ -129,7 +132,7 @@ Implement and export two async functions:
    Cite each source you use by its URL. Be specific: point to exact claims in the article
    that are contradicted by the sources. Respond entirely in Italian."
    User message: format newsText first, then list the search results clearly labeled
-   Return: the text string from response.content[0].text
+   Return: the text string from response.choices[0].message.content
 
 2. runDefender(newsText, searchResults)
    Same structure, different system prompt:
@@ -139,7 +142,7 @@ Implement and export two async functions:
    evidence base — do not invent facts. Cite each source you use by its URL.
    Be specific: point to exact claims in the article that are confirmed by the sources.
    Respond entirely in Italian."
-   Return: the text string from response.content[0].text
+   Return: the text string from response.choices[0].message.content
 
 On API error: return a string like "Agent error: [error message]" — never throw.
 ```
@@ -155,7 +158,9 @@ In the existing /src/agents/debate.js, add a third exported async function:
 
 runJudge(newsText, prosecutorArgument, defenderArgument)
 
-Call the Anthropic API (claude-sonnet-4-6) with max_tokens: 700 and this system prompt:
+Call the Regolo.ai API (Llama-3.3-70B-Instruct) using the same structure as in Prompt 3
+(URL: https://api.regolo.ai/v1/chat/completions, Bearer auth, response.choices[0].message.content)
+with max_tokens: 700 and this system prompt:
 
 "You are an impartial judge in a fact-checking debate. You have read a news article
 and two opposing arguments: one claiming the article is false or misleading, one claiming
@@ -247,10 +252,10 @@ Wrap everything in try/catch. On unhandled error return 500:
 { error: "Analysis failed. Please try again.", details: error.message }
 
 Also add a GET /api/test endpoint (no authentication needed) that checks:
-- ANTHROPIC_API_KEY is set (not empty)
+- REGOLO_API_KEY is set (not empty)
 - SERPER_API_KEY is set (not empty)
 - Makes one minimal Serper search ("test") and checks it returns results
-Returns: { anthropic: "ok"|"missing", serper: "ok"|"error", ready: true|false }
+Returns: { regolo: "ok"|"missing", serper: "ok"|"error", ready: true|false }
 Use this before the demo to verify everything is working.
 
 Register this router in src/index.js under the path /api.

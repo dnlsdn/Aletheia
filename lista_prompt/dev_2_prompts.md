@@ -80,6 +80,7 @@ Install these dependencies: express, dotenv, axios, cors
 
 Create a .env file with these empty fields:
 SERPER_API_KEY=
+REGOLO_API_KEY=
 PORT=3002
 
 In src/index.js:
@@ -132,35 +133,54 @@ At the bottom, add a self-test block (only runs when file is executed directly):
 
 ---
 
-## Prompt 3 — Semantic similarity and Mutation Score
+## Prompt 3 — Semantic similarity and Mutation Score (powered by Regolo.ai embeddings)
 
 **Send when:** Prompt 2 is done and the self-test shows multiple results.
 
 ```
 In the existing project, create /src/utils/similarity.js.
 
-This module computes how semantically similar two texts are, without using any external API.
-Use a simple but effective TF-IDF cosine similarity approach (no ML libraries needed):
+This module computes how semantically similar two texts are using REAL semantic embeddings
+from Regolo.ai (EU-hosted, zero data retention). This is more accurate than keyword matching
+because it captures meaning, not just word overlap.
 
-Export one function: computeSimilarity(text1, text2)
+Regolo.ai embeddings API:
+- URL: https://api.regolo.ai/v1/embeddings
+- Method: POST
+- Headers: { "Authorization": "Bearer " + process.env.REGOLO_API_KEY, "Content-Type": "application/json" }
+- Body: { "model": "text-embedding-3-small", "input": textToEmbed }
+  NOTE: if "text-embedding-3-small" returns an error, check the available embedding models
+  in the Regolo.ai dashboard and use the correct model name (commonly bge-m3 or similar).
+- Response: data.data[0].embedding  (array of floats, the embedding vector)
 
-Implementation:
-1. Tokenize both texts: lowercase, remove punctuation, split by spaces
-2. Remove Italian stopwords: ["il", "la", "lo", "le", "gli", "un", "una", "uno", "del",
-   "della", "dei", "degli", "delle", "di", "da", "in", "con", "su", "per", "tra", "fra",
-   "che", "chi", "cui", "non", "si", "ha", "hanno", "è", "sono", "e", "o", "ma", "se"]
-3. Build a vocabulary of all unique words across both texts
-4. For each text, build a TF (term frequency) vector over the vocabulary
-5. Compute cosine similarity between the two vectors:
-   similarity = dot_product / (magnitude_A * magnitude_B)
-6. Return a float between 0.0 (completely different) and 1.0 (identical)
-7. Edge case: if either text is empty, return 0
+Export two functions:
+
+1. async getEmbedding(text)
+   - Calls the Regolo.ai embeddings API with the given text
+   - Returns the embedding array (array of floats)
+   - On error: log it and return null
+
+2. computeCosineSimilarity(vecA, vecB)
+   - Pure math, no API call needed
+   - dot_product = sum of (vecA[i] * vecB[i]) for all i
+   - magnitude_A = sqrt(sum of vecA[i]^2)
+   - magnitude_B = sqrt(sum of vecB[i]^2)
+   - return dot_product / (magnitude_A * magnitude_B)
+   - If either vector is null or empty: return 0
+
+3. async computeSimilarity(text1, text2)
+   - Calls getEmbedding on both texts IN PARALLEL using Promise.all
+   - If either embedding fails (null), fall back to a simple word overlap ratio:
+     count shared words / max(word count of text1, word count of text2)
+   - Otherwise return computeCosineSimilarity(embedding1, embedding2)
+   - This fallback ensures the pipeline never fails even if the embeddings API is down
 
 Then create /src/utils/mutation.js.
 
 Export one async function: computeMutationScores(originalText, versions)
 - versions is an array of { title, url, snippet, domain }
 - For each version, call computeSimilarity(originalText, version.snippet)
+- IMPORTANT: run the similarity calls sequentially (not parallel) to avoid rate limiting
 - Add to each version:
     similarity: the float (0-1)
     mutationScore: Math.round((1 - similarity) * 100)  (0 = identical, 100 = completely changed)
@@ -168,6 +188,11 @@ Export one async function: computeMutationScores(originalText, versions)
 - Sort the versions by similarity descending (most similar first)
 - Mark the first item (highest similarity) as isSource: true
 - Return the sorted array with all new fields added
+
+At the bottom of similarity.js, add a self-test (only runs when file is executed directly):
+- Call computeSimilarity("Il governo ha approvato una legge", "Il parlamento ha approvato la norma")
+- Call computeSimilarity("Il governo ha approvato una legge", "La pizza napoletana è ottima")
+- Print both results — first should be > 0.7, second should be < 0.4
 ```
 
 ---

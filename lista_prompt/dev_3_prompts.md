@@ -38,6 +38,10 @@ Also install these libraries:
 - recharts (for the mutation timeline chart)
 - vis-network (for the source credibility graph)
 
+Create a .env.local file in the project root with these fields (leave values empty for now):
+ELEVENLABS_API_KEY=
+NEXT_PUBLIC_APP_ENV=development
+
 Create the file /src/lib/mockData.js with this exact content — this represents
 what the real APIs will return. We will use this during development.
 
@@ -468,4 +472,102 @@ In the existing Next.js project, make these final improvements for the demo pres
    even when the card is partially off-screen.
 
 5. Add a simple footer: "Truth Engine — Codemotion Rome AI Tech Week 2026 | Hackathon"
+```
+
+---
+
+## Prompt 10 — ElevenLabs voice verdict
+
+**Send when:** Prompt 9 is done. This is the final feature — it requires an ElevenLabs API key.
+
+```
+In the existing Next.js project, add a "listen to verdict" feature powered by ElevenLabs TTS.
+ElevenLabs is the audio AI partner of this hackathon and supports Italian natively.
+
+STEP 1 — Create the Next.js API route /src/app/api/speak/route.js
+
+This server-side route keeps the ElevenLabs API key hidden from the browser.
+
+Implementation:
+- Export an async function POST(request)
+- Parse the body: const { text, voiceId } = await request.json()
+- Validate: if text is missing or empty, return Response with status 400 and body { error: "text is required" }
+- Call ElevenLabs API:
+    URL: https://api.elevenlabs.io/v1/text-to-speech/${voiceId || "pNInz6obpgDQGcFmaJgB"}
+    Method: POST
+    Headers:
+      "xi-api-key": process.env.ELEVENLABS_API_KEY
+      "Content-Type": "application/json"
+      "Accept": "audio/mpeg"
+    Body:
+      {
+        "text": text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": { "stability": 0.5, "similarity_boost": 0.75 }
+      }
+- If the ElevenLabs response is not ok: return Response with status 502 and body { error: "ElevenLabs API error" }
+- Return the audio: new Response(audioBlob, { headers: { "Content-Type": "audio/mpeg" } })
+  where audioBlob = await elevenLabsResponse.arrayBuffer()
+
+Note: "pNInz6obpgDQGcFmaJgB" is the Adam voice (multilingual). You can replace it with
+any voice ID from your ElevenLabs account that supports Italian.
+
+STEP 2 — Create /src/components/VoiceVerdict.js
+
+This component receives: { verdict, summary, confidence }
+It shows a single button that plays the verdict summary aloud.
+
+Internal state:
+- isPlaying: boolean (default false)
+- isLoading: boolean (default false)
+- error: string or null
+
+The button:
+- When idle: shows a speaker icon (🔊) and text "Ascolta il verdetto"
+- When loading: shows "Generazione audio..." and is disabled
+- When playing: shows "▶ In riproduzione..." and is disabled
+- On error: shows "Audio non disponibile" in small red text below the button
+
+On button click:
+1. Set isLoading to true
+2. Build the verdict text to speak — use this template (in Italian):
+   "Verdetto: [human-readable verdict in Italian]. Confidenza: [confidence] percento.
+   [summary text]"
+   Verdict translation map:
+   VERIFIED → "Verificato"
+   PARTIALLY_TRUE → "Parzialmente vero"
+   INCONCLUSIVE → "Inconcludente"
+   MISLEADING → "Fuorviante"
+   FALSE → "Falso"
+
+3. POST to /api/speak with body { text: verdictText }
+4. On success:
+   - Get the response as a Blob
+   - Create an object URL: URL.createObjectURL(blob)
+   - Create a new Audio(objectUrl) and play it
+   - Set isLoading to false, isPlaying to true
+   - When audio ends (audio.onended): set isPlaying to false, revoke the object URL
+5. On error: set isLoading to false, set error to "Audio non disponibile"
+
+Style the button to match the verdict color (green for VERIFIED, red for FALSE, etc.)
+Use the same color mapping as VerdictCard.
+
+STEP 3 — Add VoiceVerdict to the main page
+
+In /src/app/page.js, import VoiceVerdict.
+Inside the VerdictCard section (after the verdict is shown), add:
+<VoiceVerdict
+  verdict={analysisResult.verdict}
+  summary={analysisResult.summary}
+  confidence={analysisResult.confidence}
+/>
+
+Place it right below the verdict badge, before the confidence bar.
+
+STEP 4 — Test
+- Add your ElevenLabs API key to .env.local
+- Run the app and analyze a demo case
+- Click "Ascolta il verdetto" — the verdict summary should play in Italian
+- Verify the button states (loading → playing → idle) work correctly
+- If you get a 502 error, check that ELEVENLABS_API_KEY is set and valid
 ```

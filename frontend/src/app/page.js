@@ -1,28 +1,89 @@
 'use client';
 
-import { useState } from 'react';
-import { mockAnalysis, mockMutation } from '@/lib/mockData';
+import { useState, useEffect, useRef } from 'react';
 import VerdictCard from '@/components/VerdictCard';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
 import SourceGraph from '@/components/SourceGraph';
 import ViralityRisk from '@/components/ViralityRisk';
 
+const LOADING_MESSAGES = [
+  'Searching for sources...',
+  'Running adversarial debate between agents...',
+  'Evaluating judge verdict...',
+  'Building source credibility graph...',
+  'Computing virality risk...',
+];
+
 export default function Home() {
   const [newsText, setNewsText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [mutationResult, setMutationResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [inputError, setInputError] = useState(false);
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+  const resultsRef = useRef(null);
+  const loadingIntervalRef = useRef(null);
+
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingMsgIndex(0);
+      loadingIntervalRef.current = setInterval(() => {
+        setLoadingMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+      }, 2000);
+    } else {
+      clearInterval(loadingIntervalRef.current);
+    }
+    return () => clearInterval(loadingIntervalRef.current);
+  }, [isLoading]);
 
   const handleAnalyze = async () => {
-    if (!newsText.trim()) return;
+    if (newsText.trim().length < 20) {
+      setInputError(true);
+      return;
+    }
+    setInputError(false);
+    setError(null);
     setIsLoading(true);
     setAnalysisResult(null);
     setMutationResult(null);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setAnalysisResult(mockAnalysis);
-    setMutationResult(mockMutation);
-    setIsLoading(false);
+
+    try {
+      const [analysisRes, mutationRes] = await Promise.all([
+        fetch('http://localhost:3001/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: newsText }),
+        }),
+        fetch('http://localhost:3002/mutation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: newsText }),
+        }),
+      ]);
+
+      if (!analysisRes.ok || !mutationRes.ok) {
+        throw new Error(`API error: ${analysisRes.status} / ${mutationRes.status}`);
+      }
+
+      const [analysis, mutation] = await Promise.all([
+        analysisRes.json(),
+        mutationRes.json(),
+      ]);
+
+      setAnalysisResult(analysis);
+      setMutationResult(mutation);
+      setIsLoading(false);
+
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      setIsLoading(false);
+      setError('Analysis failed. Please check your connection and try again.');
+    }
   };
 
   return (
@@ -100,13 +161,16 @@ export default function Home() {
                   className="w-full bg-transparent text-[16px] text-white placeholder:text-[rgba(140,144,159,0.4)] focus:outline-none resize-none leading-[24px]"
                 />
               </div>
+              {inputError && (
+                <p className="text-[#ff6b6b] text-[13px]">Please enter a longer text to analyze.</p>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] tracking-[0.55px] uppercase text-[#8c909f]">
                   {newsText.length} / 3000 characters
                 </span>
                 <button
                   onClick={handleAnalyze}
-                  disabled={isLoading || !newsText.trim()}
+                  disabled={isLoading}
                   className="bg-[#adc6ff] hover:bg-[#c2d8ff] disabled:opacity-40 disabled:cursor-not-allowed text-[#002e6a] font-bold text-[16px] px-[24px] py-[8px] rounded-[6px] transition-colors"
                 >
                   Analyze →
@@ -114,17 +178,26 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Error banner */}
+            {error && (
+              <div className="bg-[rgba(255,107,107,0.1)] border border-[#ff6b6b] rounded-[8px] px-[16px] py-[12px] text-[#ff6b6b] text-[14px]">
+                {error}
+              </div>
+            )}
+
             {/* Loading */}
             {isLoading && (
               <div className="text-center py-16">
                 <div className="inline-block w-8 h-8 border-4 border-[#adc6ff] border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-[11px] tracking-[1.1px] uppercase text-[#8c909f]">Analyzing...</p>
+                <p className="text-[11px] tracking-[1.1px] uppercase text-[#adc6ff] transition-all duration-500">
+                  {LOADING_MESSAGES[loadingMsgIndex]}
+                </p>
               </div>
             )}
 
             {/* Results */}
             {!isLoading && analysisResult && (
-              <>
+              <div ref={resultsRef}>
                 {/* Verdict Card */}
                 <VerdictCard
                   verdict={analysisResult.verdict}
@@ -156,7 +229,7 @@ export default function Home() {
                   <ViralityRisk viralityRisk={mutationResult.viralityRisk} />
                 )}
 
-              </>
+              </div>
             )}
 
           </div>

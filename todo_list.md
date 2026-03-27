@@ -106,7 +106,7 @@ curl -X POST http://localhost:3002/mutation \
 
 > File di riferimento: `docs/lista_prompt/dev_3_prompts.md`
 
-- [ ] **Dev 3 — Prompt 8**: sostituire mock data con chiamate reali a :3001 e :3002 (Promise.all)
+- [x] **Dev 3 — Prompt 8**: sostituire mock data con chiamate reali a :3001 e :3002 (Promise.all)
       + loading messages ciclici + error handling
 - [ ] **Dev 3 — Prompt 9**: demo polish — 3 bottoni demo pre-fill, export JSON, font size, colori verdetto, footer
 - [ ] **Dev 3 — Prompt 10**: `VoiceVerdict` ElevenLabs — API route `/api/speak` + componente + pulsante "Ascolta il verdetto"

@@ -8,6 +8,29 @@ const { assessCredibility } = require('../utils/credibility');
 const { buildSourceGraph } = require('../utils/graph');
 const { computeViralityRisk } = require('../utils/virality');
 
+// In-memory rate limiter: { ip -> [timestamp, ...] }
+const rateLimitMap = new Map();
+const RATE_LIMIT_MAX = 8;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const timestamps = (rateLimitMap.get(ip) || []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    rateLimitMap.set(ip, timestamps);
+    return true;
+  }
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  return false;
+}
+
+function formatTime(date) {
+  return date.toTimeString().slice(0, 8);
+}
+
 router.post('/mutation', async (req, res) => {
   const { text } = req.body;
 
@@ -17,11 +40,20 @@ router.post('/mutation', async (req, res) => {
     });
   }
 
-  try {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({
+      error: 'Too many requests. Please wait 60 seconds.',
+    });
+  }
+
+  const startTime = Date.now();
+
+  const pipeline = async () => {
     // Strip HTML tags and truncate
     const cleanedText = text.replace(/<[^>]*>/g, '').slice(0, 3000);
 
-    // 1. Fetch versions from multiple sources
+    // 1. Fetch versions from multiple sources (proceed even with < 2 results)
     const versions = await fetchVersions(cleanedText);
 
     // 2. Compute mutation scores (similarity, mutationScore, isSource)
@@ -39,12 +71,29 @@ router.post('/mutation', async (req, res) => {
     // 5. Compute virality risk
     const viralityRisk = computeViralityRisk(cleanedText, versionsWithCredibility);
 
-    return res.json({
-      versions: versionsWithCredibility,
-      graph,
-      viralityRisk,
-    });
+    return { versions: versionsWithCredibility, graph, viralityRisk };
+  };
+
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('TIMEOUT')), 20000)
+  );
+
+  try {
+    const result = await Promise.race([pipeline(), timeout]);
+
+    const elapsed = Date.now() - startTime;
+    const preview = text.replace(/\s+/g, ' ').trim().slice(0, 60);
+    console.log(
+      `[${formatTime(new Date())}] MUTATION | ${preview}... | versions: ${result.versions.length} | virality: ${result.viralityRisk.score} | ${elapsed}ms`
+    );
+
+    return res.json(result);
   } catch (err) {
+    if (err.message === 'TIMEOUT') {
+      return res.status(408).json({
+        error: 'Mutation analysis timed out. Please try again.',
+      });
+    }
     console.error('[POST /mutation] error:', err.message);
     return res.status(500).json({
       error: 'Mutation analysis failed.',

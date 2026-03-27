@@ -86,7 +86,7 @@ curl -X POST http://localhost:3001/api/analyze \
 - [x] **Dev 2 — Prompt 4**: `src/utils/credibility.js` — score per dominio (high/medium/low)
 - [x] **Dev 2 — Prompt 5**: `src/utils/graph.js` — grafo vis-network compatible
 - [x] **Dev 2 — Prompt 6**: `src/utils/virality.js` — Virality Risk Score euristico
-- [ ] **Dev 2 — Prompt 7**: `src/routes/mutation.js` — pipeline completa `POST /mutation`
+- [x] **Dev 2 — Prompt 7**: `src/routes/mutation.js` — pipeline completa `POST /mutation`
       → verifica con curl (vedi sotto)
 - [ ] **Dev 2 — Prompt 8**: hardening — timeout 20s, rate limit, logging, CORS
 

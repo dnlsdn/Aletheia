@@ -86,7 +86,7 @@ router.post('/analyze', async (req, res) => {
   };
 
   try {
-    const result = await Promise.race([pipeline(), timeoutPromise(30_000)]);
+    const result = await Promise.race([pipeline(), timeoutPromise(60_000)]);
 
     const { prosecutionResults, defenseResults, prosecutorArg, defenderArg, judgeResult } = result;
     const duration = Date.now() - start;

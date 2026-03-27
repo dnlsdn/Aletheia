@@ -54,9 +54,9 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 
 > File di riferimento: `docs/lista_prompt/dev_1_prompts.md`
 
-- [ ] **Dev 1 — Prompt 2**: `src/utils/search.js` — utility Serper + self-test
+- [x] **Dev 1 — Prompt 2**: `src/utils/search.js` — utility Serper + self-test
       → verifica: `node src/utils/search.js` stampa risultati reali
-- [ ] **Dev 1 — Prompt 3**: `src/agents/debate.js` — `runProsecutor` + `runDefender` via Regolo.ai
+- [x] **Dev 1 — Prompt 3**: `src/agents/debate.js` — `runProsecutor` + `runDefender` via Regolo.ai
 - [ ] **Dev 1 — Prompt 4**: aggiungere `runJudge` a `debate.js` — risposta JSON con fallback
 - [ ] **Dev 1 — Prompt 5**: `src/routes/analyze.js` — pipeline completa `POST /api/analyze`
       → verifica con curl (vedi sotto)

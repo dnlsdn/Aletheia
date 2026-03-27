@@ -2,8 +2,8 @@
 
 - [ ]  Creare repo GitHub con struttura monorepo (frontend/, backend/, docs/)
 - [ ]  Configurare variabili d'ambiente (.env): chiavi API **Regolo.ai**, Serper, **ElevenLabs**
-- [ ]  Definire stack definitivo: Next.js + Node.js (3 servizi separati — vedi gantt.md)
-- [ ]  Scegliere il motore di web search: Serper API (google.serper.dev — già scelto)
+- [x]  Definire stack definitivo: Next.js + Node.js (3 servizi separati — vedi gantt.md)
+- [x]  Scegliere il motore di web search: Serper API (google.serper.dev — già scelto)
 - [ ]  Configurare deployment veloce (Vercel per frontend, Railway/Render per backend)
 - [ ]  **Registrarsi su Regolo.ai** (https://dashboard.regolo.ai) e generare API key — necessario per Dev 1 e Dev 2
 - [ ]  **Registrarsi su ElevenLabs** e generare API key — necessario per Dev 3
@@ -16,7 +16,6 @@
 - [ ]  Gestire orchestrazione parallela dei tre agenti (async/await, timeout handling)
 - [ ]  Implementare classificazione 5 categorie: VERIFICATO / PARZIALMENTE VERO / INCONCLUDENTE / FUORVIANTE / FALSO
 - [ ]  Endpoint POST /api/analyze che restituisce risultato strutturato (porta 3001)
-- [ ]  Aggiungere deduplication delle fonti trovate dai due agenti
 - [ ]  Gestione errori: cosa fare se web search non trova nulla o le fonti sono irraggiungibili
 
 ## Dev 2 — Mutation tracking & Source Graph (embeddings: Regolo.ai)
@@ -36,7 +35,7 @@
 - [ ]  Implementare Vulnerability Score con breakdown per categoria (urgency, tribal, emotional, cherry-pick, authority, no-sources)
 - [ ]  Costruire pagina principale: input URL/testo + bottone analizza
 - [ ]  Componente risultato: badge verdetto colorato + confidence score
-- [ ]  Componente reasoning: mostrare il dibattito Prosecutor vs Defender con fonti citate
+- [ ]  Componente reasoning: sezione "Full debate" collassabile con testo completo Prosecutor/Defender e fonti linkate (→ Prompt 3 VerdictCard)
 - [ ]  Componente Vulnerability Score: barra breakdown con etichette per ogni tecnica trovata
 - [ ]  Componente Source Graph: visualizzazione interattiva vis-network (nodi colorati, archi)
 - [ ]  Componente Mutation Timeline: curva discendente da fonte primaria alle versioni successive

@@ -1,4 +1,7 @@
-# Truth Engine — Contesto per Claude
+# Truth Engine — Contesto del progetto
+
+> **Se usi Claude**: questo file viene letto automaticamente. Non devi fare nulla.
+> **Se usi Antigravity o altro AI**: incolla l'intero contenuto di questo file come **primo messaggio** prima di iniziare a lavorare sui prompt del tuo file `lista_prompt/dev_X_prompts.md`.
 
 ## Il progetto
 
@@ -55,10 +58,56 @@ Il sistema risponde a tre domande simultanee su una notizia:
 - `lista_prompt/flusso.md` — coordinate tra i 3 dev
 - `lista_prompt/update_antigravity.md` — istruzioni per Google Antigravity
 
+## JSON contracts (contratti fissi tra i 3 servizi)
+
+Non modificare questi contratti senza sincronizzarsi con tutti e tre i dev.
+
+### Backend 1 → Frontend: `POST http://localhost:3001/api/analyze`
+```json
+{
+  "verdict": "VERIFIED | PARTIALLY_TRUE | INCONCLUSIVE | MISLEADING | FALSE",
+  "confidence": 78,
+  "summary": "Spiegazione del verdetto in 2-3 frasi.",
+  "prosecutor_argument": "Testo completo dell'argomento contro la notizia.",
+  "defender_argument": "Testo completo dell'argomento a favore della notizia.",
+  "prosecutor_sources": [{ "title": "...", "url": "...", "snippet": "..." }],
+  "defender_sources": [{ "title": "...", "url": "...", "snippet": "..." }],
+  "prosecutor_points": ["punto chiave 1", "punto chiave 2"],
+  "defender_points": ["punto chiave 1", "punto chiave 2"]
+}
+```
+
+### Backend 2 → Frontend: `POST http://localhost:3002/mutation`
+```json
+{
+  "versions": [
+    {
+      "title": "Titolo articolo",
+      "url": "https://...",
+      "domain": "ansa.it",
+      "snippet": "Estratto breve",
+      "similarity": 0.94,
+      "mutationScore": 6,
+      "isSource": true,
+      "credibility": { "score": 92, "level": "high", "color": "#1D9E75" }
+    }
+  ],
+  "graph": {
+    "nodes": [{ "id": 1, "label": "ansa.it", "color": "#1D9E75", "size": 30, "credibilityScore": 92 }],
+    "edges": [{ "from": 1, "to": 2, "label": "republished by", "arrows": "to" }]
+  },
+  "viralityRisk": {
+    "score": 65,
+    "label": "High risk — rapid spread likely before a debunk can contain it",
+    "breakdown": { "shortMessage": 20, "urgencyWords": 15, "emotionalWords": 10, "manyVersions": 20, "lowCredibilitySources": 0 }
+  }
+}
+```
+
 ## Note importanti
 
 - I prompt in `lista_prompt/` sono progettati per **Google Antigravity** (vibecoding — ogni prompt va incollato e lasciato girare prima di passare al successivo)
-- Il **JSON contract** tra i 3 dev è fisso e documentato in ogni prompt file — non va cambiato senza sincronizzare tutti
 - I 5 verdetti sono: `VERIFIED`, `PARTIALLY_TRUE`, `INCONCLUSIVE`, `MISLEADING`, `FALSE`
 - Target audience per il pitch: **istituzioni, intelligence, difesa** — non utenti consumer
 - Mockdata completo in `dev_3_prompts.md` Prompt 1 — il frontend è sviluppato in anticipo rispetto ai backend
+- I SYNC POINT nei file prompt indicano quando un dev deve comunicare agli altri che il suo endpoint è live

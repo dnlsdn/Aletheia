@@ -1,3 +1,9 @@
+## ⚠️ Prima di iniziare — Leggi il contesto condiviso
+
+Incolla il contenuto del file `CLAUDE.md` (nella root del repo) come **primo messaggio** ad Antigravity prima di questo file. Contiene l'architettura completa, i JSON contract con gli altri servizi, e lo stack tecnico deciso.
+
+---
+
 ## Your role: Frontend — UI, Vulnerability Score & Demo
 
 You are building the face of Truth Engine: the web interface that takes a news article,
@@ -147,7 +153,9 @@ Font sizes should be large enough to read comfortably from a projector (minimum 
 ```
 In the existing Next.js project, create /src/components/VerdictCard.js.
 
-This component receives: { verdict, confidence, summary, prosecutorPoints, defenderPoints }
+This component receives:
+{ verdict, confidence, summary, prosecutorPoints, defenderPoints,
+  prosecutorSources, defenderSources, prosecutorArgument, defenderArgument }
 
 Display:
 
@@ -173,6 +181,21 @@ Display:
 4. Two-column section titled "Key arguments":
    Left column — "Against" — list of prosecutor_points, each with a red dot
    Right column — "In favor" — list of defender_points, each with a green dot
+
+5. Collapsible "Full debate" section — collapsed by default, toggled by a "Show full debate ▼" button:
+   Two sub-sections side by side (or stacked on small screens):
+
+   Left — "Prosecution" (red left border):
+   - The full prosecutorArgument text in a scrollable box (max-height 200px)
+   - Below it, a list of prosecutor_sources: for each source show the title as a link
+     (href = url, target="_blank") followed by the snippet in smaller muted text
+
+   Right — "Defense" (green left border):
+   - The full defenderArgument text in a scrollable box (max-height 200px)
+   - Below it, a list of defender_sources: same format — title as link + snippet
+
+   The "Show full debate" button toggles a boolean state (showDebate).
+   When collapsed, only the button is visible. When open, both panels appear.
 
 Add this component to the main page, shown as the first thing after the input form
 when results are available.

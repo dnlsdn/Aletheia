@@ -1,3 +1,9 @@
+## ⚠️ Prima di iniziare — Leggi il contesto condiviso
+
+Incolla il contenuto del file `CLAUDE.md` (nella root del repo) come **primo messaggio** ad Antigravity prima di questo file. Contiene l'architettura completa, i JSON contract con gli altri servizi, e lo stack tecnico deciso.
+
+---
+
 ## Your role: Backend — Mutation Tracking, Source Graph & Virality Risk
 
 You are building the "how did this news spread and mutate?" side of Truth Engine.

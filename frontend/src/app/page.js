@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import VerdictCard from '@/components/VerdictCard';
+import VoiceVerdict from '@/components/VoiceVerdict';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
 import SourceGraph from '@/components/SourceGraph';
@@ -265,6 +266,11 @@ export default function Home() {
                   defenderSources={analysisResult.defender_sources}
                   prosecutorArgument={analysisResult.prosecutor_argument}
                   defenderArgument={analysisResult.defender_argument}
+                />
+                <VoiceVerdict
+                  verdict={analysisResult.verdict}
+                  summary={analysisResult.summary}
+                  confidence={analysisResult.confidence}
                 />
 
                 {/* Vulnerability Score */}

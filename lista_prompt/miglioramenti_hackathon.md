@@ -500,4 +500,4 @@ Do not touch anything else in the file.
 ```
 
 ## Ordine Prompt
-P5 → P2 → P4 → P3 → P1 
+P5 → P2 → P4 → P3 → P1

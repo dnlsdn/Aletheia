@@ -36,7 +36,7 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 
 > File di riferimento: `docs/lista_prompt/dev_3_prompts.md`
 
-- [ ] **Dev 3 — Prompt 1** *(adattato)*: creare solo `src/lib/mockData.js` con `mockAnalysis` e `mockMutation`
+- [x] **Dev 3 — Prompt 1** *(adattato)*: creare solo `src/lib/mockData.js` con `mockAnalysis` e `mockMutation`
       → il resto del setup è già fatto, non serve ricreare il progetto Next.js
 - [ ] **Dev 3 — Prompt 2**: main page layout + textarea + bottone Analyze (mock delay 1500ms)
 - [ ] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)

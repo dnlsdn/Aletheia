@@ -41,7 +41,7 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 - [x] **Dev 3 — Prompt 2**: main page layout + textarea + bottone Analyze (mock delay 1500ms)
 - [x] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)
 - [x] **Dev 3 — Prompt 4**: componente `VulnerabilityScore` (calcolato lato client dal testo)
-- [ ] **Dev 3 — Prompt 5**: componente `MutationTimeline` (recharts line chart)
+- [x] **Dev 3 — Prompt 5**: componente `MutationTimeline` (recharts line chart)
 - [ ] **Dev 3 — Prompt 6**: componente `SourceGraph` (vis-network, usa `'use client'`)
 - [ ] **Dev 3 — Prompt 7**: componente `ViralityRisk` (score grande + breakdown)
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { mockAnalysis, mockMutation } from '@/lib/mockData';
 import VerdictCard from '@/components/VerdictCard';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
+import MutationTimeline from '@/components/MutationTimeline';
 
 export default function Home() {
   const [newsText, setNewsText] = useState('');
@@ -137,6 +138,11 @@ export default function Home() {
 
                 {/* Vulnerability Score */}
                 <VulnerabilityScore newsText={newsText} />
+
+                {/* Mutation Timeline */}
+                {mutationResult && (
+                  <MutationTimeline versions={mutationResult.versions} />
+                )}
 
                 {/* Mutation Tracking */}
                 {mutationResult && (

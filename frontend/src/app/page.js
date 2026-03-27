@@ -6,6 +6,7 @@ import VerdictCard from '@/components/VerdictCard';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
 import SourceGraph from '@/components/SourceGraph';
+import ViralityRisk from '@/components/ViralityRisk';
 
 export default function Home() {
   const [newsText, setNewsText] = useState('');
@@ -150,73 +151,9 @@ export default function Home() {
                   <SourceGraph graph={mutationResult.graph} />
                 )}
 
-                {/* Mutation Tracking */}
+                {/* Virality Risk */}
                 {mutationResult && (
-                  <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[24px]">
-                    <div>
-                      <h2 className="font-bold text-[20px] text-white tracking-[-0.5px] leading-[28px]">
-                        Mutation Tracking
-                      </h2>
-                      <p className="text-[12px] tracking-[1.2px] uppercase text-[#8c909f] leading-[16px] mt-[2px]">
-                        {mutationResult.versions.length} versions found across sources
-                      </p>
-                    </div>
-
-                    {/* Version rows */}
-                    <div className="bg-[#0e1322] flex flex-col gap-[2px] pb-[8px]">
-                      {mutationResult.versions.map((v, i) => {
-                        const isHigh = v.mutationScore > 30;
-                        return (
-                          <div key={i} className="bg-[#1a1f2f] flex items-center justify-between p-[16px]">
-                            <div className="flex items-center gap-[16px]">
-                              <span
-                                className="w-[6px] h-[6px] rounded-full flex-shrink-0"
-                                style={{ backgroundColor: v.credibility.color }}
-                              />
-                              <div>
-                                <p className="font-medium text-[14px] text-[#dee1f7] leading-[20px]">{v.title}</p>
-                                <p className="text-[11px] tracking-[0.55px] uppercase text-[#8c909f] leading-[16.5px]">
-                                  {v.domain}
-                                </p>
-                              </div>
-                            </div>
-                            <span
-                              className="font-mono text-[11px] px-[8px] py-[2px] rounded-[4px] flex-shrink-0"
-                              style={{
-                                color: isHigh ? '#ffb4ab' : '#68dbae',
-                                backgroundColor: isHigh ? 'rgba(255,180,171,0.1)' : 'rgba(104,219,174,0.1)',
-                              }}
-                            >
-                              {`VER_${v.mutationScore}`}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Virality Risk */}
-                    <div className="border-t border-[rgba(66,71,84,0.1)] pt-[25px] flex items-center justify-between">
-                      <div className="flex items-center gap-[16px]">
-                        <span className="font-bold text-[24px] text-[#ba7517] leading-[32px]">
-                          {mutationResult.viralityRisk.score} / 100
-                        </span>
-                        <div className="w-px h-[32px] bg-[rgba(66,71,84,0.3)]" />
-                        <div>
-                          <p className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#ba7517] leading-[16.5px]">
-                            Virality Risk
-                          </p>
-                          <p className="text-[12px] text-[#c2c6d6] leading-[16px]">
-                            {mutationResult.viralityRisk.label}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-[8px]">
-                        <span className="w-[8px] h-[8px] rounded-full bg-[#ba7517]" />
-                        <span className="w-[8px] h-[8px] rounded-full bg-[rgba(186,117,23,0.4)]" />
-                        <span className="w-[8px] h-[8px] rounded-full bg-[rgba(186,117,23,0.2)]" />
-                      </div>
-                    </div>
-                  </div>
+                  <ViralityRisk viralityRisk={mutationResult.viralityRisk} />
                 )}
 
               </>

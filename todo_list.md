@@ -81,7 +81,7 @@ curl -X POST http://localhost:3001/api/analyze \
 
 - [x] **Dev 2 — Prompt 2**: `src/utils/search.js` + `src/utils/multisource.js` — 3 query parallele + dedup
       → verifica: `node src/utils/multisource.js` stampa domini trovati
-- [ ] **Dev 2 — Prompt 3**: `src/utils/similarity.js` (embeddings Regolo.ai + fallback word-overlap) + `src/utils/mutation.js`
+- [x] **Dev 2 — Prompt 3**: `src/utils/similarity.js` (embeddings Regolo.ai + fallback word-overlap) + `src/utils/mutation.js`
       → verifica: self-test similarity semantica
 - [ ] **Dev 2 — Prompt 4**: `src/utils/credibility.js` — score per dominio (high/medium/low)
 - [ ] **Dev 2 — Prompt 5**: `src/utils/graph.js` — grafo vis-network compatible

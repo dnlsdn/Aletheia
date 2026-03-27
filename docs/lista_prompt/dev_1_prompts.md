@@ -2,112 +2,42 @@
 
 You are building the core intelligence of Truth Engine: three AI agents that debate the truthfulness of a news article and produce a structured verdict.
 
-**Your backend runs on port 3001.Dev 2's backend runs on port 3002.Dev 3 (frontend) will call your API at `POST /api/analyze`.**
-
-> Paste each prompt into Google Antigravity. Review the implementation plan it generates before approving. Let it run. Test. Then move to the next prompt.
-> 
+**Your backend runs on port 3001. Dev 2's backend runs on port 3002. Dev 3 (frontend) will call your API at `POST /api/analyze`.**
 
 ---
 
-## STEP 0 — Team sync (do this together, first 30 min)
+## ✅ Prompt 1 — DONE (scaffold già esistente)
 
-Before writing a single line of code, the three of you must agree on the **JSON contract**: the exact format your endpoint returns, so Dev 3 can build the UI immediately with mock data without waiting for you.
-
-**Share this with Dev 3 right now:**
-
-```json
-{
-  "verdict": "VERIFIED | PARTIALLY_TRUE | INCONCLUSIVE | MISLEADING | FALSE",
-  "confidence": 78,
-  "summary": "Short explanation of the verdict in 2-3 sentences.",
-  "prosecutor_argument": "Full text of the argument against the news article.",
-  "defender_argument": "Full text of the argument supporting the news article.",
-  "prosecutor_sources": [
-    { "title": "Source title", "url": "https://...", "snippet": "Relevant excerpt" }
-  ],
-  "defender_sources": [
-    { "title": "Source title", "url": "https://...", "snippet": "Relevant excerpt" }
-  ],
-  "prosecutor_points": ["key point 1", "key point 2"],
-  "defender_points": ["key point 1", "key point 2"]
-}
-```
-
-**Also tell Dev 2:** your backend will be reachable at `http://localhost:3001` and your analyze endpoint is `POST /api/analyze`.
-
-Once everyone knows what to expect from each other, you can all work independently.
-
----
-
-## Prompt 1 — Project setup
-
-**Send when:** immediately after Step 0. No dependencies on anyone else.
+Il progetto è già scaffoldato. Esiste già:
 
 ```
-=== PROJECT ===
-Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
-Create this project inside a NEW folder called backend1/ in the current repo root.
-Do not create the project in the repo root itself — it must be inside backend1/.
-===============
-
-Create a Node.js backend project for a fact-checking system called Truth Engine.
-
-Project structure:
-- /src/agents/    (AI agents go here)
-- /src/routes/    (API endpoints)
-- /src/utils/     (shared utilities)
-- /src/index.js   (entry point)
-
-Install these dependencies: express, dotenv, axios, cors
-
-Create a .env file with these fields (leave values empty for now):
-REGOLO_API_KEY=
-SERPER_API_KEY=
-PORT=3001
-
-Create a .gitignore file with these entries:
-node_modules/
-.env
-.env.local
-*.log
-
-In src/index.js:
-- Load dotenv at the very top
-- Set up Express with CORS enabled for all origins
-- Parse JSON request bodies
-- Start the server on the PORT from .env (fallback: 3001)
-- Add GET /health that returns: { status: "ok", service: "truth-engine-agents" }
-- Log "Truth Engine agents backend running on port 3001" on startup
+backend-1/
+├── src/server.js       ← Express su porta 3001, CORS, /health, stub POST /api/analyze
+├── package.json        ← dependencies: express, dotenv, axios, cors
+├── .env                ← REGOLO_API_KEY e SERPER_API_KEY già compilati
+└── .gitignore
 ```
 
----
-
-## ⛔ STOP — API Keys (fare prima di Prompt 2)
-
-Prima di continuare, apri il file `.env` creato da Antigravity e inserisci le chiavi reali:
-
+Verifica che il server parta:
+```bash
+cd backend-1 && npm run dev
+# → "Backend 1 running on http://localhost:3001"
+curl http://localhost:3001/health
+# → {"status":"ok","service":"backend-1","port":3001}
 ```
-REGOLO_API_KEY=la_tua_chiave_da_dashboard.regolo.ai
-SERPER_API_KEY=la_tua_chiave_da_serper.dev
-PORT=3001
-```
-
-**Senza queste chiavi, Prompt 2 eseguirà web search che ritorna `[]` silenziosamente — tutto sembrerà funzionare ma gli agenti non avranno fonti e produrranno verdetti casuali.**
-
-Aggiorna anche `STATUS.md` nella root con le chiavi disponibili (NON committare le chiavi nel repo — aggiorna solo la riga "Chi la fornisce").
 
 ---
 
 ## Prompt 2 — Web search utility
 
-**Send when:** Prompt 1 is running and you can reach http://localhost:3001/health.
+**Quando inviarlo:** dopo aver verificato che `/health` risponde.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
 Already exists:
-• src/index.js — Express server, GET /health returns {status:"ok"}, dotenv loaded, CORS enabled
+• src/server.js — Express server, GET /health returns {status:"ok"}, dotenv loaded, CORS enabled
 • .env — has REGOLO_API_KEY and SERPER_API_KEY (already filled in)
 • .gitignore — excludes node_modules/, .env
 ===============
@@ -117,7 +47,7 @@ In the existing Node.js project, create /src/utils/search.js.
 Export one async function: webSearch(query, numResults = 5)
 
 The function must:
-1. POST to <https://google.serper.dev/search>
+1. POST to https://google.serper.dev/search
 2. Headers: { "X-API-Key": process.env.SERPER_API_KEY, "Content-Type": "application/json" }
 3. Body: { q: query, num: numResults, gl: "it", hl: "it" }
    (gl/hl = Italian geolocation and language, gives more relevant results for Italian news)
@@ -135,14 +65,14 @@ At the bottom, add a self-test block that only runs when this file is executed d
 
 ## Prompt 3 — Prosecutor and Defender agents
 
-**Send when:** Prompt 2 is done and the self-test prints real results.
+**Quando inviarlo:** dopo che il self-test di Prompt 2 stampa risultati reali.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
 Already exists:
-• src/index.js — Express server on port 3001
+• src/server.js — Express server on port 3001
 • src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
   Uses Serper API (POST https://google.serper.dev/search, header X-API-Key, gl:"it", hl:"it")
 ===============
@@ -165,7 +95,7 @@ Regolo.ai API call structure:
       { role: "system", content: (the agent's system prompt) },
       { role: "user", content: (the news + sources) }
     ]
-- Response: the text is at response.choices[0].message.content
+- Response: the text is at response.data.choices[0].message.content
 
 Implement and export two async functions:
 
@@ -178,7 +108,7 @@ Implement and export two async functions:
    Cite each source you use by its URL. Be specific: point to exact claims in the article
    that are contradicted by the sources. Respond entirely in Italian."
    User message: format newsText first, then list the search results clearly labeled
-   Return: the text string from response.choices[0].message.content
+   Return: the text string from response.data.choices[0].message.content
 
 2. runDefender(newsText, searchResults)
    Same structure, different system prompt:
@@ -188,7 +118,7 @@ Implement and export two async functions:
    evidence base — do not invent facts. Cite each source you use by its URL.
    Be specific: point to exact claims in the article that are confirmed by the sources.
    Respond entirely in Italian."
-   Return: the text string from response.choices[0].message.content
+   Return: the text string from response.data.choices[0].message.content
 
 On API error: return a string like "Agent error: [error message]" — never throw.
 ```
@@ -197,27 +127,26 @@ On API error: return a string like "Agent error: [error message]" — never thro
 
 ## Prompt 4 — Judge agent
 
-**Send when:** Prompt 3 is done.
+**Quando inviarlo:** dopo che Prompt 3 è fatto.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
 Already exists:
 • src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
 • src/agents/debate.js — exports:
     runProsecutor(newsText, searchResults) → string (Italian argument against the article)
     runDefender(newsText, searchResults) → string (Italian argument supporting the article)
   Both call POST https://api.regolo.ai/v1/chat/completions, header "Authorization: Bearer REGOLO_API_KEY",
-  model "Llama-3.3-70B-Instruct", response at choices[0].message.content
+  model "Llama-3.3-70B-Instruct", response at response.data.choices[0].message.content
 ===============
 
 In the existing /src/agents/debate.js, add a third exported async function:
 
 runJudge(newsText, prosecutorArgument, defenderArgument)
 
-Call the Regolo.ai API (Llama-3.3-70B-Instruct) using the same structure as in Prompt 3
-(URL: https://api.regolo.ai/v1/chat/completions, Bearer auth, response.choices[0].message.content)
+Call the Regolo.ai API (Llama-3.3-70B-Instruct) using the same structure as above
 with max_tokens: 700 and this system prompt:
 
 "You are an impartial judge in a fact-checking debate. You have read a news article
@@ -229,11 +158,11 @@ no markdown formatting, no code blocks. Just the raw JSON.
 
 Use this exact structure:
 {
-  \\"verdict\\": \\"VERIFIED\\",
-  \\"confidence\\": 85,
-  \\"summary\\": \\"2-3 sentence explanation of the verdict in Italian.\\",
-  \\"prosecutor_points\\": [\\"strongest point from the prosecution\\", \\"second strongest point\\"],
-  \\"defender_points\\": [\\"strongest point from the defense\\", \\"second strongest point\\"]
+  \"verdict\": \"VERIFIED\",
+  \"confidence\": 85,
+  \"summary\": \"2-3 sentence explanation of the verdict in Italian.\",
+  \"prosecutor_points\": [\"strongest point from the prosecution\", \"second strongest point\"],
+  \"defender_points\": [\"strongest point from the defense\", \"second strongest point\"]
 }
 
 Verdict values and when to use them:
@@ -244,7 +173,7 @@ Verdict values and when to use them:
 - FALSE: use only when confidence >= 75 and sources clearly contradict the article
 
 The confidence score must reflect actual certainty: do not cluster everything between 55-70.
-Use the full range."
+Use the full range. Only use INCONCLUSIVE when you genuinely cannot decide after weighing all evidence."
 
 User message: format all three inputs clearly with labels.
 
@@ -257,24 +186,24 @@ After receiving the response:
 
 ---
 
-## Prompt 5 — Main /analyze endpoint
+## Prompt 5 — Main /api/analyze endpoint
 
-**Send when:** Prompt 4 is done.
-**⚠️ Message Dev 3 when this is working — it unblocks their real API integration.**
+**Quando inviarlo:** dopo che Prompt 4 è fatto.
+**⚠️ Dopo che funziona: aggiorna STATUS.md con ✅ e un esempio JSON reale.**
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
 Already exists:
+• src/server.js — Express server on port 3001, GET /health, stub POST /api/analyze (da rimuovere)
 • src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
 • src/agents/debate.js — exports:
     runProsecutor(newsText, searchResults) → string
     runDefender(newsText, searchResults) → string
     runJudge(newsText, prosecutorArg, defenderArg) → {verdict, confidence, summary, prosecutor_points, defender_points}
   All three call Regolo.ai (POST https://api.regolo.ai/v1/chat/completions, Bearer REGOLO_API_KEY,
-  model "Llama-3.3-70B-Instruct", response at choices[0].message.content)
-• src/index.js — Express server on port 3001, /health endpoint
+  model "Llama-3.3-70B-Instruct", response at response.data.choices[0].message.content)
 ===============
 
 In the existing project, create /src/routes/analyze.js.
@@ -328,34 +257,42 @@ Also add a GET /api/test endpoint (no authentication needed) that checks:
 - SERPER_API_KEY is set (not empty)
 - Makes one minimal Serper search ("test") and checks it returns results
 Returns: { regolo: "ok"|"missing", serper: "ok"|"error", ready: true|false }
-Use this before the demo to verify everything is working.
 
-Register this router in src/index.js under the path /api.
+Then update src/server.js:
+- Remove the existing stub for POST /api/analyze
+- Import the analyze router: const analyzeRouter = require('./routes/analyze')
+- Register it: app.use('/api', analyzeRouter)
 ```
 
 ---
 
-## SYNC POINT after Prompt 5
+## SYNC POINT dopo Prompt 5
 
-When Prompt 5 is working:
+Quando Prompt 5 funziona:
 
-1. Run `curl -X POST <http://localhost:3001/api/analyze> -H "Content-Type: application/json" -d '{"text": "Il governo italiano ha approvato una legge che obbliga tutti i cittadini a registrare i propri dispositivi elettronici entro 30 giorni pena una multa di 5000 euro."}'`
-2. Copy the full JSON response
-3. **Send it to Dev 3** — they need a real example to replace their mock data
+1. Testa con curl:
+```bash
+curl -X POST http://localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Il governo italiano ha approvato una legge che obbliga tutti i cittadini a registrare i propri dispositivi elettronici entro 30 giorni pena una multa di 5000 euro."}'
+```
+2. Copia il JSON completo
+3. Aggiorna `STATUS.md` nella root con ✅ e incolla l'esempio JSON
 
 ---
 
-## Prompt 6 — Stress test and tuning
+## Prompt 6 — Stress test e calibrazione
 
-**Send when:** Prompt 5 is done and Dev 3 confirmed integration works.
+**Quando inviarlo:** dopo Prompt 5.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
 Already exists: full pipeline working. POST http://localhost:3001/api/analyze accepts {text} and returns
 {verdict, confidence, summary, prosecutor_argument, defender_argument, prosecutor_sources,
 defender_sources, prosecutor_points, defender_points}
+The route is in src/routes/analyze.js, registered in src/server.js under /api.
 ===============
 
 In the existing Truth Engine backend, create /src/scripts/runTests.js.
@@ -369,7 +306,7 @@ Test cases (hardcode them in the script):
 4. "Un famoso politico italiano ha dichiarato che 'l'immigrazione illegale è aumentata del 400% negli ultimi due anni'. I dati ufficiali del Ministero mostrano un incremento del 23%."
 
 For each test case:
-- Call POST <http://localhost:3001/api/analyze>
+- Call POST http://localhost:3001/api/analyze
 - Wait for the result (use sequential calls with await, not parallel — avoid rate limits)
 - Print: TEST [number] | VERDICT: [verdict] | CONFIDENCE: [confidence]% | SUMMARY: [first 80 chars of summary]
 
@@ -388,16 +325,17 @@ Fix: add to the judge prompt "Only use INCONCLUSIVE when you genuinely cannot de
 
 ---
 
-## Prompt 7 — Final hardening
+## Prompt 7 — Hardening finale
 
-**Send when:** Prompt 6 tests pass. This is your last task.
+**Quando inviarlo:** dopo che i test di Prompt 6 passano. Questo è il tuo ultimo task.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — backend 1 (adversarial agents & verdict)
-Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
-Already exists: full pipeline working and stress-tested. src/routes/analyze.js handles POST /api/analyze.
-The pipeline runs: 2 parallel Serper searches → runProsecutor + runDefender in parallel → runJudge → JSON response.
+Working directory: backend-1/  |  Runtime: Node.js  |  Port: 3001
+Already exists: full pipeline working and stress-tested. src/routes/analyze.js handles POST /analyze,
+registered in src/server.js under /api. The pipeline runs:
+2 parallel Serper searches → runProsecutor + runDefender in parallel → runJudge → JSON response.
 ===============
 
 In the existing Truth Engine backend, add these production-level protections to src/routes/analyze.js:

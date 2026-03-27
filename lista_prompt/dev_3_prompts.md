@@ -1,61 +1,34 @@
-## 🔁 Routine dopo ogni prompt
-
-Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md`.
-
----
-
 ## Your role: Frontend — UI, Vulnerability Score & Demo
 
 You are building the face of Truth Engine: the web interface that takes a news article,
 sends it to two backend services, and displays the full analysis in a clear, impactful way.
 
-**Your Next.js app runs on port 3000.Dev 1's backend runs on port 3001** — you call it at `POST /api/analyze`**Dev 2's backend runs on port 3002** — you call it at `POST /mutation`
+**Your Next.js app runs on port 3000. Dev 1's backend runs on port 3001 (`POST /api/analyze`). Dev 2's backend runs on port 3002 (`POST /mutation`).**
 
-The key advantage you have: **you don't need to wait for Dev 1 or Dev 2 to start.**
+You don't need to wait for Dev 1 or Dev 2 to start.
 You will build the entire UI first using mock data, then swap in the real API calls at the end.
 
-> Paste each prompt into Google Antigravity. Review the implementation plan it generates before approving. Let it run. Test visually in the browser. Then move to the next prompt.
-> 
-
 ---
 
-## STEP 0 — Team sync (do this together, first 30 min)
+## Prompt 1 — Mock data
 
-Before writing any code, get the **JSON contracts** from Dev 1 and Dev 2.
-These are the exact formats their APIs will return.
-
-Dev 1 will give you the structure for `/api/analyze`.
-Dev 2 will give you the structure for `/mutation`.
-
-Copy them into a note — you will use them to build the mock data in Prompt 1.
-
-Once you have the contracts, you can work completely independently until Prompt 7.
-
----
-
-## Prompt 1 — Project setup with mock data
-
-**Send when:** immediately after Step 0. No dependencies on Dev 1 or Dev 2.
+**Quando inviarlo:** subito. Nessuna dipendenza.
 
 ```
-=== PROJECT ===
-Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
-Create this project inside a NEW folder called frontend/ in the current repo root.
-Do not create the project in the repo root itself — it must be inside frontend/.
+=== CONTEXT ===
+Project: Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
+Working directory: frontend/  |  Runtime: Next.js 14  |  Port: 3000
+Already exists:
+• Next.js + Tailwind project scaffolded (App Router)
+• src/app/layout.js — root layout
+• src/app/page.js — placeholder page (sarà sostituita in Prompt 2)
+• src/app/globals.css — Tailwind base styles
+• Installed: next, react, react-dom, recharts, vis-network, tailwindcss, postcss, autoprefixer
+• next.config.js, tailwind.config.js, postcss.config.js — già configurati
+• .env.local — has ELEVENLABS_API_KEY and NEXT_PUBLIC_APP_ENV=development
 ===============
 
-Create a Next.js project with Tailwind CSS for a fact-checking web application called Truth Engine.
-
-Also install these libraries:
-- recharts (for the mutation timeline chart)
-- vis-network (for the source credibility graph)
-
-Create a .env.local file in the project root with these fields (leave values empty for now):
-ELEVENLABS_API_KEY=
-NEXT_PUBLIC_APP_ENV=development
-
-Create the file /src/lib/mockData.js with this exact content — this represents
-what the real APIs will return. We will use this during development.
+In the existing Next.js project, create /src/lib/mockData.js with this exact content:
 
 export const mockAnalysis = {
   verdict: "MISLEADING",
@@ -98,28 +71,28 @@ export const mockMutation = {
   viralityRisk: {
     score: 68,
     label: "High risk — rapid spread likely before a debunk can contain it",
-    breakdown: { shortMessage: 10, urgencyWords: 8, emotionalWords: 8, manyVersions: 20, lowCredibilitySources: 20, totalComponents: 5 }
+    breakdown: { shortMessage: 10, urgencyWords: 8, emotionalWords: 8, manyVersions: 20, lowCredibilitySources: 20 }
   }
 }
 ```
 
 ---
 
-## Prompt 2 — Main page layout and input form
+## Prompt 2 — Main page layout e input form
 
-**Send when:** Prompt 1 is done.
+**Quando inviarlo:** dopo che Prompt 1 è fatto.
 
 ```
 === CONTEXT ===
 Project: Truth Engine — frontend (Next.js, port 3000)
 Working directory: frontend/
 Already exists:
-• Next.js + Tailwind project scaffolded
+• Next.js + Tailwind project scaffolded (App Router)
 • src/lib/mockData.js — exports mockAnalysis and mockMutation with realistic Italian news data
 • .env.local — has ELEVENLABS_API_KEY
 ===============
 
-In the existing Next.js project, replace the content of /src/app/page.js (or page.tsx).
+In the existing Next.js project, replace the content of /src/app/page.js.
 
 Build the main page of Truth Engine with this layout:
 
@@ -161,9 +134,9 @@ Font sizes should be large enough to read comfortably from a projector (minimum 
 
 ---
 
-## Prompt 3 — Verdict component
+## Prompt 3 — Componente VerdictCard
 
-**Send when:** Prompt 2 is done and you can see the mock results appear on click.
+**Quando inviarlo:** dopo che Prompt 2 è fatto e i mock results appaiono al click.
 
 ```
 === CONTEXT ===
@@ -171,7 +144,7 @@ Project: Truth Engine — frontend (Next.js, port 3000)
 Working directory: frontend/
 Already exists:
 • src/lib/mockData.js — exports mockAnalysis (has: verdict, confidence, summary, prosecutor_argument, defender_argument, prosecutor_sources, defender_sources, prosecutor_points, defender_points) and mockMutation
-• src/app/page.js — main page with: textarea input, Analyze button, state variables (newsText, isLoading, analysisResult, mutationResult). On click loads mock data. Results section renders components when analysisResult is set.
+• src/app/page.js — main page with: textarea input, Analyze button, state variables (newsText, isLoading, analysisResult, mutationResult). On click loads mock data after 1500ms delay. Results section renders when analysisResult is set.
 ===============
 
 In the existing Next.js project, create /src/components/VerdictCard.js.
@@ -221,14 +194,14 @@ Display:
    When collapsed, only the button is visible. When open, both panels appear.
 
 Add this component to the main page, shown as the first thing after the input form
-when results are available.
+when results are available. Pass props from analysisResult.
 ```
 
 ---
 
-## Prompt 4 — Vulnerability Score component
+## Prompt 4 — Componente VulnerabilityScore
 
-**Send when:** Prompt 3 is done and looks good in the browser.
+**Quando inviarlo:** dopo che Prompt 3 è fatto e sembra bene nel browser.
 
 ```
 === CONTEXT ===
@@ -303,9 +276,9 @@ Add this component to the main page, shown after the VerdictCard.
 
 ---
 
-## Prompt 5 — Mutation Timeline chart
+## Prompt 5 — Componente MutationTimeline
 
-**Send when:** Prompt 4 is done.
+**Quando inviarlo:** dopo che Prompt 4 è fatto.
 
 ```
 === CONTEXT ===
@@ -355,9 +328,9 @@ Add this component to the main page after VulnerabilityScore.
 
 ---
 
-## Prompt 6 — Source Credibility Graph
+## Prompt 6 — Componente SourceGraph
 
-**Send when:** Prompt 5 is done.
+**Quando inviarlo:** dopo che Prompt 5 è fatto.
 
 ```
 === CONTEXT ===
@@ -378,11 +351,11 @@ graph is an object with: nodes (array) and edges (array)
 Use the vis-network library to render an interactive network graph.
 
 IMPORTANT: vis-network requires a DOM element reference and cannot be used server-side.
-Use React's useRef and useEffect hooks. Add 'use client' at the top of the file.
+Add 'use client' at the top of the file. Use React's useRef and useEffect hooks.
 
 Setup:
 1. Create a div ref with useRef
-2. In useEffect (runs after mount), initialize vis-network:
+2. In useEffect (runs after mount, re-runs if graph changes), initialize vis-network:
    - Container: the div ref
    - Data: { nodes: new DataSet(graph.nodes), edges: new DataSet(graph.edges) }
    - Options:
@@ -392,6 +365,7 @@ Setup:
      physics: { enabled: false }
      interaction: { hover: true, tooltipDelay: 100 }
 3. The container div must have an explicit height: 320px
+4. Destroy the previous vis-network instance before creating a new one (use networkRef to track it)
 
 Add a title above the graph: "Source Credibility Graph"
 Add a subtitle: "How the article spread across sources (size = credibility)"
@@ -409,9 +383,9 @@ Add this component to the main page after MutationTimeline.
 
 ---
 
-## Prompt 7 — Virality Risk component
+## Prompt 7 — Componente ViralityRisk
 
-**Send when:** Prompt 6 is done.
+**Quando inviarlo:** dopo che Prompt 6 è fatto.
 
 ```
 === CONTEXT ===
@@ -463,20 +437,20 @@ This should be the last component in the results section.
 
 ---
 
-## SYNC POINT — Wait for Dev 1 and Dev 2
+## ⏸ SYNC POINT — Aspetta Dev 1 e Dev 2
 
-At this point your UI is complete and looks great with mock data.
-**Now wait for Dev 1 to message you that `/api/analyze` is live.And wait for Dev 2 to message you that `/mutation` is live.**
+A questo punto la UI è completa con mock data.
+**Aspetta che Dev 1 aggiorna STATUS.md con /api/analyze live.
+Aspetta che Dev 2 aggiorna STATUS.md con /mutation live.**
 
-When you get both confirmations, ask them to send you one real example response each.
-Update your mockData.js with the real examples to make sure formats match exactly.
-Then move to Prompt 8.
+Quando hai entrambe le conferme: fai `git pull`, leggi gli esempi JSON reali da STATUS.md,
+aggiorna mockData.js con i dati reali per sicurezza, poi vai al Prompt 8.
 
 ---
 
-## Prompt 8 — Real API integration
+## Prompt 8 — Integrazione API reale
 
-**Send when:** Dev 1 AND Dev 2 have both confirmed their backends are running.
+**Quando inviarlo:** dopo che ENTRAMBI i backend sono live.
 
 ```
 === CONTEXT ===
@@ -505,9 +479,9 @@ When the Analyze button is clicked:
 2. Set isLoading to true, clear any previous results.
 
 3. Make two API calls IN PARALLEL using Promise.all:
-   - Call A: POST to <http://localhost:3001/api/analyze>
+   - Call A: POST to http://localhost:3001/api/analyze
      body: { text: newsText }
-   - Call B: POST to <http://localhost:3002/mutation>
+   - Call B: POST to http://localhost:3002/mutation
      body: { text: newsText }
 
 4. When both resolve:
@@ -538,7 +512,7 @@ This makes the wait feel alive and shows the jury what's happening behind the sc
 
 ## Prompt 9 — Demo polish
 
-**Send when:** Prompt 8 is done and the real API calls work end to end.
+**Quando inviarlo:** dopo che Prompt 8 funziona end-to-end con le API reali.
 
 ```
 === CONTEXT ===
@@ -581,21 +555,10 @@ In the existing Next.js project, make these final improvements for the demo pres
 
 ---
 
-## ⛔ STOP — ElevenLabs API Key (fare prima di Prompt 10)
+## Prompt 10 — VoiceVerdict ElevenLabs
 
-Prima di eseguire Prompt 10, apri `.env.local` e inserisci la chiave:
-
-```
-ELEVENLABS_API_KEY=la_tua_chiave_da_elevenlabs.io
-```
-
-Senza questa chiave il codice verrà generato correttamente ma ogni click su "Ascolta il verdetto" restituirà un errore 502. Puoi ottenere la key gratis su [elevenlabs.io](https://elevenlabs.io) → sezione API Keys.
-
----
-
-## Prompt 10 — ElevenLabs voice verdict
-
-**Send when:** Prompt 9 is done. This is the final feature — it requires an ElevenLabs API key.
+**Quando inviarlo:** dopo che Prompt 9 è fatto. Questo è il feature finale.
+**Nota: ELEVENLABS_API_KEY è già in frontend/.env.local.**
 
 ```
 === CONTEXT ===
@@ -603,7 +566,7 @@ Project: Truth Engine — frontend (Next.js, port 3000)
 Working directory: frontend/
 Already exists: complete UI with demo cases, export button, polished styles.
 src/app/page.js has all 5 result components. src/components/VerdictCard.js shows verdict badge, confidence, summary, key arguments, full debate section.
-.env.local has ELEVENLABS_API_KEY (already filled in).
+.env.local has ELEVENLABS_API_KEY already filled in.
 ===============
 
 In the existing Next.js project, add a "listen to verdict" feature powered by ElevenLabs TTS.
@@ -631,11 +594,10 @@ Implementation:
         "voice_settings": { "stability": 0.5, "similarity_boost": 0.75 }
       }
 - If the ElevenLabs response is not ok: return Response with status 502 and body { error: "ElevenLabs API error" }
-- Return the audio: new Response(audioBlob, { headers: { "Content-Type": "audio/mpeg" } })
-  where audioBlob = await elevenLabsResponse.arrayBuffer()
+- Return the audio: new Response(audioBuffer, { headers: { "Content-Type": "audio/mpeg" } })
+  where audioBuffer = await elevenLabsResponse.arrayBuffer()
 
-Note: "pNInz6obpgDQGcFmaJgB" is the Adam voice (multilingual). You can replace it with
-any voice ID from your ElevenLabs account that supports Italian.
+Note: "pNInz6obpgDQGcFmaJgB" is the Adam voice (multilingual, supports Italian).
 
 STEP 2 — Create /src/components/VoiceVerdict.js
 
@@ -690,9 +652,8 @@ Inside the VerdictCard section (after the verdict is shown), add:
 Place it right below the verdict badge, before the confidence bar.
 
 STEP 4 — Test
-- Add your ElevenLabs API key to .env.local
 - Run the app and analyze a demo case
 - Click "Ascolta il verdetto" — the verdict summary should play in Italian
 - Verify the button states (loading → playing → idle) work correctly
-- If you get a 502 error, check that ELEVENLABS_API_KEY is set and valid
+- If you get a 502 error, check that ELEVENLABS_API_KEY is set in .env.local
 ```

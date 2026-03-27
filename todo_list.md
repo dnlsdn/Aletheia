@@ -1,65 +1,146 @@
-## Setup iniziale — Tutto il team
+## Stato setup iniziale
 
-- [ ]  Creare repo GitHub con struttura monorepo (frontend/, backend/, docs/)
-- [ ]  Configurare variabili d'ambiente (.env): chiavi API **Regolo.ai**, Serper, **ElevenLabs**
-- [x]  Definire stack definitivo: Next.js + Node.js (3 servizi separati — vedi gantt.md)
-- [x]  Scegliere il motore di web search: Serper API (google.serper.dev — già scelto)
-- [ ]  Configurare deployment veloce (Vercel per frontend, Railway/Render per backend)
-- [ ]  **Registrarsi su Regolo.ai** (https://dashboard.regolo.ai) e generare API key — necessario per Dev 1 e Dev 2
-- [ ]  **Registrarsi su ElevenLabs** e generare API key — necessario per Dev 3
+- [x] Creare repo GitHub con struttura monorepo (backend-1/, backend-2/, frontend/, docs/)
+- [x] Configurare variabili d'ambiente: REGOLO_API_KEY, SERPER_API_KEY (backend-1/.env, backend-2/.env)
+- [x] ELEVENLABS_API_KEY in frontend/.env.local
+- [x] Definire stack: Next.js + Node.js (3 servizi separati)
+- [x] Serper API scelto come motore di web search
+- [x] `npm run install:all` eseguito — tutte le dipendenze installate
+- [ ] Deployment (Vercel + Railway/Render) — da fare DOPO che tutto funziona in locale
 
-## Dev 1 — Pipeline agenti & verdetto (LLM: Regolo.ai)
+---
 
-- [ ]  Implementare Agent Prosecutor via **Regolo.ai** (Llama-3.3-70B-Instruct): cerca fonti che smentiscono
-- [ ]  Implementare Agent Defender via **Regolo.ai**: cerca fonti che confermano la notizia
-- [ ]  Implementare Judge Agent via **Regolo.ai**: verdetto motivato con confidence score
-- [ ]  Gestire orchestrazione parallela dei tre agenti (async/await, timeout handling)
-- [ ]  Implementare classificazione 5 categorie: VERIFICATO / PARZIALMENTE VERO / INCONCLUDENTE / FUORVIANTE / FALSO
-- [ ]  Endpoint POST /api/analyze che restituisce risultato strutturato (porta 3001)
-- [ ]  Gestione errori: cosa fare se web search non trova nulla o le fonti sono irraggiungibili
+## Cosa è già stato scaffoldato da Claude (Step 0)
 
-## Dev 2 — Mutation tracking & Source Graph (embeddings: Regolo.ai)
+> Non serve eseguire i Prompt 1 di nessun dev — lo scaffold è già fatto.
 
-- [ ]  Recuperare versioni multiple della notizia da fonti diverse con web search multi-query
-- [ ]  Identificare la fonte primaria (più autorevole o più antica trovata)
-- [ ]  Calcolare semantic similarity tramite **embeddings Regolo.ai** (più accurata di TF-IDF keyword)
-- [ ]  Produrre Mutation Score: 0 = identico all'originale, 100 = completamente alterato
-- [ ]  Costruire Source Credibility Graph: nodi = fonti, archi = "ha ripreso da"
-- [ ]  Assegnare credibilità a ogni nodo (verde/giallo/rosso) basata su dominio
-- [ ]  Esporre dati del grafo come JSON (nodes[], edges[]) per il frontend
-- [ ]  Implementare Virality Risk Score: formula euristica su emotional loading + brevità + pattern fonti
-- [ ]  Endpoint POST /mutation (porta 3002) che restituisce source graph + mutation score + virality risk
+| Servizio | Cosa esiste già |
+|---------|----------------|
+| `backend-1/` | `src/server.js` (Express su 3001, /health, POST /api/analyze stub), package.json, .env con keys |
+| `backend-2/` | `src/server.js` (Express su 3002, /health, POST /mutation stub), package.json, .env con keys |
+| `frontend/` | Next.js + Tailwind + recharts + vis-network installati, App Router scaffold, .env.local con ElevenLabs key |
 
-## Dev 3 — Frontend & Vulnerability Score (TTS: ElevenLabs)
+**→ Tutti e 3 i Prompt 1 sono SALTATI. Parti dal Prompt 2 di ogni dev.**
 
-- [ ]  Implementare Vulnerability Score con breakdown per categoria (urgency, tribal, emotional, cherry-pick, authority, no-sources)
-- [ ]  Costruire pagina principale: input URL/testo + bottone analizza
-- [ ]  Componente risultato: badge verdetto colorato + confidence score
-- [ ]  Componente reasoning: sezione "Full debate" collassabile con testo completo Prosecutor/Defender e fonti linkate (→ Prompt 3 VerdictCard)
-- [ ]  Componente Vulnerability Score: barra breakdown con etichette per ogni tecnica trovata
-- [ ]  Componente Source Graph: visualizzazione interattiva vis-network (nodi colorati, archi)
-- [ ]  Componente Mutation Timeline: curva discendente da fonte primaria alle versioni successive
-- [ ]  Componente Virality Risk: numero grande + breakdown componenti
-- [ ]  **VoiceVerdict**: pulsante "Ascolta il verdetto" che chiama **ElevenLabs** via API route Next.js — legge il summary in italiano con voce AI (eleven_multilingual_v2)
-- [ ]  Loading state durante l'analisi con messaggi ciclici (già definiti in Prompt 8)
-- [ ]  Responsive e leggibile da proiettore (font grandi, contrasto alto per la demo)
+---
+
+## Ordine di esecuzione consigliato
+
+### Perché questo ordine?
+Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — costruisce tutto con mock data e dà una UI completa da mostrare subito. Dev 1 e Dev 2 si fanno dopo in sequenza (sono lo stesso dev). L'integrazione reale (Dev 3 Prompt 8) si sblocca solo quando entrambi i backend sono live.
+
+---
+
+### FASE 1 — Frontend con mock data (Dev 3, Prompt 2→7)
+*Nessuna dipendenza. Parte subito. Risultato: UI completa visibile nel browser.*
+
+> File di riferimento: `docs/lista_prompt/dev_3_prompts.md`
+
+- [ ] **Dev 3 — Prompt 1** *(adattato)*: creare solo `src/lib/mockData.js` con `mockAnalysis` e `mockMutation`
+      → il resto del setup è già fatto, non serve ricreare il progetto Next.js
+- [ ] **Dev 3 — Prompt 2**: main page layout + textarea + bottone Analyze (mock delay 1500ms)
+- [ ] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)
+- [ ] **Dev 3 — Prompt 4**: componente `VulnerabilityScore` (calcolato lato client dal testo)
+- [ ] **Dev 3 — Prompt 5**: componente `MutationTimeline` (recharts line chart)
+- [ ] **Dev 3 — Prompt 6**: componente `SourceGraph` (vis-network, usa `'use client'`)
+- [ ] **Dev 3 — Prompt 7**: componente `ViralityRisk` (score grande + breakdown)
+
+**✅ CHECKPOINT FASE 1**: `npm run fe` → apri browser su localhost:3000 → clicca Analyze → tutti i componenti visibili con mock data.
+
+---
+
+### FASE 2 — Backend 1: agenti LLM (Dev 1, Prompt 2→7)
+*Dipendenza: REGOLO_API_KEY e SERPER_API_KEY (già in .env). Prompt 1 già fatto.*
+
+> File di riferimento: `docs/lista_prompt/dev_1_prompts.md`
+
+- [ ] **Dev 1 — Prompt 2**: `src/utils/search.js` — utility Serper + self-test
+      → verifica: `node src/utils/search.js` stampa risultati reali
+- [ ] **Dev 1 — Prompt 3**: `src/agents/debate.js` — `runProsecutor` + `runDefender` via Regolo.ai
+- [ ] **Dev 1 — Prompt 4**: aggiungere `runJudge` a `debate.js` — risposta JSON con fallback
+- [ ] **Dev 1 — Prompt 5**: `src/routes/analyze.js` — pipeline completa `POST /api/analyze`
+      → verifica con curl (vedi sotto)
+- [ ] **Dev 1 — Prompt 6**: `src/scripts/runTests.js` — stress test 4 casi, calibrazione Judge
+- [ ] **Dev 1 — Prompt 7**: hardening — timeout 30s, rate limit, logging, CORS
+
+**✅ CHECKPOINT FASE 2**:
+```bash
+curl -X POST http://localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "BREAKING: Scienziati italiani hanno dimostrato che il 5G causa perdita di memoria."}'
+```
+→ risposta JSON con `verdict`, `confidence`, `summary`, argomenti, fonti.
+→ Aggiornare `STATUS.md` con ✅ e incollare esempio JSON reale.
+
+---
+
+### FASE 3 — Backend 2: mutation tracking (Dev 2, Prompt 2→8)
+*Dipendenza: REGOLO_API_KEY e SERPER_API_KEY (già in .env). Prompt 1 già fatto.*
+
+> File di riferimento: `docs/lista_prompt/dev_2_prompts.md`
+
+- [ ] **Dev 2 — Prompt 2**: `src/utils/search.js` + `src/utils/multisource.js` — 3 query parallele + dedup
+      → verifica: `node src/utils/multisource.js` stampa domini trovati
+- [ ] **Dev 2 — Prompt 3**: `src/utils/similarity.js` (embeddings Regolo.ai + fallback word-overlap) + `src/utils/mutation.js`
+      → verifica: self-test similarity semantica
+- [ ] **Dev 2 — Prompt 4**: `src/utils/credibility.js` — score per dominio (high/medium/low)
+- [ ] **Dev 2 — Prompt 5**: `src/utils/graph.js` — grafo vis-network compatible
+- [ ] **Dev 2 — Prompt 6**: `src/utils/virality.js` — Virality Risk Score euristico
+- [ ] **Dev 2 — Prompt 7**: `src/routes/mutation.js` — pipeline completa `POST /mutation`
+      → verifica con curl (vedi sotto)
+- [ ] **Dev 2 — Prompt 8**: hardening — timeout 20s, rate limit, logging, CORS
+
+**✅ CHECKPOINT FASE 3**:
+```bash
+curl -X POST http://localhost:3002/mutation \
+  -H "Content-Type: application/json" \
+  -d '{"text": "BREAKING: Scienziati italiani hanno dimostrato che il 5G causa perdita di memoria."}'
+```
+→ risposta JSON con `versions`, `graph`, `viralityRisk`.
+→ Aggiornare `STATUS.md` con ✅ e incollare esempio JSON reale.
+
+---
+
+### FASE 4 — Integrazione reale + polish (Dev 3, Prompt 8→10)
+*Dipendenza: entrambi i backend live (Fase 2 + Fase 3 complete).*
+
+> File di riferimento: `docs/lista_prompt/dev_3_prompts.md`
+
+- [ ] **Dev 3 — Prompt 8**: sostituire mock data con chiamate reali a :3001 e :3002 (Promise.all)
+      + loading messages ciclici + error handling
+- [ ] **Dev 3 — Prompt 9**: demo polish — 3 bottoni demo pre-fill, export JSON, font size, colori verdetto, footer
+- [ ] **Dev 3 — Prompt 10**: `VoiceVerdict` ElevenLabs — API route `/api/speak` + componente + pulsante "Ascolta il verdetto"
+
+**✅ CHECKPOINT FINALE**:
+- `npm run dev` (avvia tutti e 3 i servizi)
+- Analizza "Case 1" → verdetto FALSE/MISLEADING, grafo, voce italiana
+
+---
 
 ## Preparazione demo
 
-- [ ]  Caso 1: trovare notizia italiana falsa con alta mutazione — testare e verificare output
-- [ ]  Caso 2: trovare notizia vera ma con Vulnerability Score alto — testare e verificare output
-- [ ]  Caso 3: trovare notizia inconcludente — testare e verificare che il sistema dica "non lo so"
-- [ ]  Caso 4 (live): trovare notizia fresca sabato mattina — analizzarla overnight per la demo domenica
-- [ ]  Fare un dry-run completo del pitch con demo in meno di 2 minuti
-- [ ]  Preparare fallback: screenshot/gif pre-registrati in caso di problemi di rete durante la demo
+- [ ] Caso 1: notizia falsa con alta mutazione — output calibrato
+- [ ] Caso 2: notizia vera ma con Vulnerability Score alto — output calibrato
+- [ ] Caso 3: notizia inconcludente — il sistema dice "non lo so"
+- [ ] Caso 4 (live): notizia fresca sabato mattina → analisi overnight
+- [ ] Dry-run pitch completo in meno di 2 minuti
+- [ ] Screenshot/gif di backup in caso di problemi di rete
+
+---
 
 ## Pitch & presentazione
 
-- [ ]  Preparare slide di apertura: le tre domande + dati 59% italiani / 1 su 3 giovani
-- [ ]  Preparare slide architettura tecnica semplificata (per la giuria tecnica) — includere loghi Regolo.ai ed ElevenLabs
-- [ ]  Preparare slide angolo Rheinmetall: information warfare + **privacy-first con Regolo.ai EU-hosted**
-- [ ]  Allenare transizione fluida da slide a demo live e ritorno
-- [ ]  **Includere nel momento demo**: cliccare "Ascolta il verdetto" — la voce ElevenLabs legge il risultato in italiano (massimo impatto)
-- [ ]  Preparare risposta a "come calcolate il Vulnerability Score?" (mostrare tabella breakdown)
-- [ ]  Preparare risposta a "e se il modello allucina?" (mostrare che cita solo fonti reali trovate)
-- [ ]  Preparare risposta a "perché Regolo.ai e non ChatGPT/Claude?" (zero data retention, EU-hosted, GDPR nativo)
+- [ ] Slide apertura: le 3 domande + dati 59% italiani / 1 su 3 giovani
+- [ ] Slide architettura tecnica — loghi Regolo.ai + ElevenLabs
+- [ ] Slide angolo Rheinmetall: information warfare + privacy-first EU-hosted
+- [ ] Risposta pronta: "come calcolate il Vulnerability Score?"
+- [ ] Risposta pronta: "e se il modello allucina?"
+- [ ] Risposta pronta: "perché Regolo.ai e non ChatGPT/Claude?"
+
+---
+
+## Prossima conversazione — primo prompt da incollare
+
+**→ Dev 3, Prompt 1** — copia il testo del prompt dal file `lista_prompt/dev_3_prompts.md` (sezione "Prompt 1 — Mock data") e incollalo direttamente. Il testo è già pronto e auto-contenuto.
+
+Poi procedi in ordine: Dev 3 P2 → P3 → P4 → P5 → P6 → P7 → Dev 1 P2→P7 → Dev 2 P2→P8 → Dev 3 P8→P9→P10.

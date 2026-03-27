@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 const VERDICT_TRANSLATIONS = {
   VERIFIED:       'Verificato',
@@ -18,13 +18,53 @@ const VERDICT_COLORS = {
   FALSE:          { bg: '#ffb4ab', text: '#690005' },
 };
 
+function SoundWave({ color }) {
+  return (
+    <span className="flex items-center gap-[2px]" style={{ height: 16 }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          style={{
+            display: 'inline-block',
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: color,
+            animation: `soundBar 0.8s ease-in-out ${(i - 1) * 0.12}s infinite alternate`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes soundBar {
+          from { height: 3px; }
+          to   { height: 16px; }
+        }
+      `}</style>
+    </span>
+  );
+}
+
 export default function VoiceVerdict({ verdict, summary, confidence }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const audioRef = useRef(null);
+  const objectUrlRef = useRef(null);
 
   const colors = VERDICT_COLORS[verdict] ?? VERDICT_COLORS.INCONCLUSIVE;
   const verdictLabel = VERDICT_TRANSLATIONS[verdict] ?? verdict;
+
+  const handleStop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    setIsPlaying(false);
+  };
 
   const handlePlay = async () => {
     setIsLoading(true);
@@ -39,21 +79,26 @@ export default function VoiceVerdict({ verdict, summary, confidence }) {
         body: JSON.stringify({ text: verdictText }),
       });
 
-      if (!res.ok) {
-        throw new Error('API error');
-      }
+      if (!res.ok) throw new Error('API error');
 
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
+      objectUrlRef.current = objectUrl;
+
       const audio = new Audio(objectUrl);
+      audioRef.current = audio;
 
       setIsLoading(false);
       setIsPlaying(true);
 
       audio.play();
       audio.onended = () => {
+        audioRef.current = null;
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
+        }
         setIsPlaying(false);
-        URL.revokeObjectURL(objectUrl);
       };
     } catch {
       setIsLoading(false);
@@ -64,13 +109,14 @@ export default function VoiceVerdict({ verdict, summary, confidence }) {
   return (
     <div className="flex flex-col items-start gap-[6px]">
       <button
-        onClick={handlePlay}
-        disabled={isLoading || isPlaying}
+        onClick={isPlaying ? handleStop : handlePlay}
+        disabled={isLoading}
         style={{
-          backgroundColor: isLoading || isPlaying ? 'rgba(0,0,0,0.15)' : colors.bg,
-          color: isLoading || isPlaying ? '#8c909f' : colors.text,
+          backgroundColor: isLoading ? 'rgba(0,0,0,0.15)' : colors.bg,
+          color: isLoading ? '#8c909f' : colors.text,
+          transition: 'background-color 0.2s, color 0.2s, opacity 0.2s',
         }}
-        className="flex items-center gap-[8px] px-[18px] py-[8px] rounded-full text-[14px] font-bold uppercase tracking-[0.7px] transition-all disabled:cursor-not-allowed hover:opacity-90"
+        className="flex items-center gap-[8px] px-[18px] py-[8px] rounded-full text-[14px] font-bold uppercase tracking-[0.7px] disabled:cursor-not-allowed hover:opacity-90"
       >
         {isLoading ? (
           <>
@@ -78,7 +124,10 @@ export default function VoiceVerdict({ verdict, summary, confidence }) {
             Generazione audio...
           </>
         ) : isPlaying ? (
-          <>▶ In riproduzione...</>
+          <>
+            <SoundWave color={colors.text} />
+            <span>Stop</span>
+          </>
         ) : (
           <>🔊 Ascolta il verdetto</>
         )}

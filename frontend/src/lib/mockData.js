@@ -31,9 +31,9 @@ export const mockMutation = {
       { id: 4, label: "ilsole24ore.com", color: "#1D9E75", size: 39 }
     ],
     edges: [
-      { from: 1, to: 2, label: "republished by", arrows: "to" },
-      { from: 2, to: 3, label: "republished by", arrows: "to" },
-      { from: 1, to: 4, label: "republished by", arrows: "to" }
+      { from: 1, to: 2, arrows: "to" },
+      { from: 2, to: 3, arrows: "to" },
+      { from: 1, to: 4, arrows: "to" }
     ]
   },
   viralityRisk: {

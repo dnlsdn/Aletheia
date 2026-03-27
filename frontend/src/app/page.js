@@ -5,6 +5,7 @@ import { mockAnalysis, mockMutation } from '@/lib/mockData';
 import VerdictCard from '@/components/VerdictCard';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
+import SourceGraph from '@/components/SourceGraph';
 
 export default function Home() {
   const [newsText, setNewsText] = useState('');
@@ -144,6 +145,11 @@ export default function Home() {
                   <MutationTimeline versions={mutationResult.versions} />
                 )}
 
+                {/* Source Graph */}
+                {mutationResult && (
+                  <SourceGraph graph={mutationResult.graph} />
+                )}
+
                 {/* Mutation Tracking */}
                 {mutationResult && (
                   <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[24px]">
@@ -213,27 +219,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Source Graph placeholder */}
-                <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[24px]">
-                  <h2 className="font-bold text-[20px] text-white tracking-[-0.5px] leading-[28px]">
-                    Source propagation graph
-                  </h2>
-                  <div className="bg-[#090e1c] border border-dashed border-[rgba(66,71,84,0.4)] rounded-[8px] h-[300px] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-[16px]">
-                      <p className="text-[#8c909f] text-[14px] text-center">Interactive graph — vis-network</p>
-                      <div className="flex items-center gap-[16px]">
-                        <div className="flex items-center gap-[8px]">
-                          <span className="w-[8px] h-[8px] rounded-full bg-[#adc6ff]" />
-                          <span className="text-[9.6px] tracking-[-0.48px] uppercase text-[#8c909f]">Nodes</span>
-                        </div>
-                        <div className="flex items-center gap-[8px]">
-                          <span className="w-[8px] h-[8px] rounded-full bg-[#424754]" />
-                          <span className="text-[9.6px] tracking-[-0.48px] uppercase text-[#8c909f]">Vectors</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </>
             )}
 

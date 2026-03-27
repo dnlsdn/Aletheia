@@ -42,7 +42,7 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 - [x] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)
 - [x] **Dev 3 — Prompt 4**: componente `VulnerabilityScore` (calcolato lato client dal testo)
 - [x] **Dev 3 — Prompt 5**: componente `MutationTimeline` (recharts line chart)
-- [ ] **Dev 3 — Prompt 6**: componente `SourceGraph` (vis-network, usa `'use client'`)
+- [x] **Dev 3 — Prompt 6**: componente `SourceGraph` (vis-network, usa `'use client'`)
 - [ ] **Dev 3 — Prompt 7**: componente `ViralityRisk` (score grande + breakdown)
 
 **✅ CHECKPOINT FASE 1**: `npm run fe` → apri browser su localhost:3000 → clicca Analyze → tutti i componenti visibili con mock data.

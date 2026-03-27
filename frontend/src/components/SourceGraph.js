@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 
 const CREDIBILITY_LEVELS = [
   { color: '#1D9E75', label: 'High credibility', bg: 'rgba(29,158,117,0.12)', border: 'rgba(29,158,117,0.3)' },
@@ -90,7 +90,7 @@ export default function SourceGraph({ graph, verdictColor }) {
         scaling: { min: 14, max: 44 },
       },
       physics: { enabled: false },
-      interaction: { hover: true, tooltipDelay: 100, zoomView: false },
+      interaction: { hover: true, tooltipDelay: 100, zoomView: true },
     };
 
     networkRef.current = new Network(containerRef.current, data, options);
@@ -102,6 +102,13 @@ export default function SourceGraph({ graph, verdictColor }) {
       }
     };
   }, [graph]);
+
+  const handleZoom = useCallback((direction) => {
+    if (!networkRef.current) return;
+    const current = networkRef.current.getScale();
+    const next = direction === 'in' ? current * 1.3 : current / 1.3;
+    networkRef.current.moveTo({ scale: next, animation: { duration: 200, easingFunction: 'easeInOutQuad' } });
+  }, []);
 
   const isEmpty = !graph || graph.nodes.length < 2;
   const stats = deriveStats(graph);
@@ -154,10 +161,24 @@ export default function SourceGraph({ graph, verdictColor }) {
           </div>
         ) : (
           <div
-            className="rounded-[6px] border border-[rgba(66,71,84,0.2)] overflow-hidden"
+            className="rounded-[6px] border border-[rgba(66,71,84,0.2)] overflow-hidden relative"
             style={{ background: 'linear-gradient(160deg, #090e1c 0%, #0c1220 100%)' }}
           >
             <div ref={containerRef} style={{ height: '340px' }} />
+            <div className="absolute bottom-[12px] right-[12px] flex flex-col gap-[4px]">
+              <button
+                onClick={() => handleZoom('in')}
+                className="w-[28px] h-[28px] flex items-center justify-center rounded-[4px] font-mono text-[16px] text-[#adc6ff] bg-[rgba(14,19,34,0.85)] border border-[rgba(173,198,255,0.15)] hover:border-[rgba(173,198,255,0.4)] hover:text-white transition-colors"
+              >
+                +
+              </button>
+              <button
+                onClick={() => handleZoom('out')}
+                className="w-[28px] h-[28px] flex items-center justify-center rounded-[4px] font-mono text-[16px] text-[#adc6ff] bg-[rgba(14,19,34,0.85)] border border-[rgba(173,198,255,0.15)] hover:border-[rgba(173,198,255,0.4)] hover:text-white transition-colors"
+              >
+                −
+              </button>
+            </div>
           </div>
         )}
       </div>

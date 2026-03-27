@@ -1,12 +1,6 @@
-## ⚠️ Prima di iniziare — Leggi il contesto condiviso
-
-Incolla il contenuto del file `CLAUDE.md` (nella root del repo) come **primo messaggio** ad Antigravity prima di questo file. Contiene l'architettura completa, i JSON contract con gli altri servizi, e lo stack tecnico deciso.
-
-Se hai già lavorato in sessioni precedenti, incolla anche il contenuto di `.agent/skills/SKILL.md` (se esiste) subito dopo CLAUDE.md — contiene un log di tutto ciò che Antigravity ha già costruito, così non ricomincia da zero.
-
 ## 🔁 Routine dopo ogni prompt
 
-Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md` che Antigravity usa come memoria tra sessioni.
+Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md`.
 
 ---
 
@@ -44,6 +38,12 @@ Once you have the contracts, you can work completely independently until Prompt 
 **Send when:** immediately after Step 0. No dependencies on Dev 1 or Dev 2.
 
 ```
+=== PROJECT ===
+Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
+Create this project inside a NEW folder called frontend/ in the current repo root.
+Do not create the project in the repo root itself — it must be inside frontend/.
+===============
+
 Create a Next.js project with Tailwind CSS for a fact-checking web application called Truth Engine.
 
 Also install these libraries:
@@ -110,6 +110,15 @@ export const mockMutation = {
 **Send when:** Prompt 1 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists:
+• Next.js + Tailwind project scaffolded
+• src/lib/mockData.js — exports mockAnalysis and mockMutation with realistic Italian news data
+• .env.local — has ELEVENLABS_API_KEY
+===============
+
 In the existing Next.js project, replace the content of /src/app/page.js (or page.tsx).
 
 Build the main page of Truth Engine with this layout:
@@ -157,6 +166,14 @@ Font sizes should be large enough to read comfortably from a projector (minimum 
 **Send when:** Prompt 2 is done and you can see the mock results appear on click.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists:
+• src/lib/mockData.js — exports mockAnalysis (has: verdict, confidence, summary, prosecutor_argument, defender_argument, prosecutor_sources, defender_sources, prosecutor_points, defender_points) and mockMutation
+• src/app/page.js — main page with: textarea input, Analyze button, state variables (newsText, isLoading, analysisResult, mutationResult). On click loads mock data. Results section renders components when analysisResult is set.
+===============
+
 In the existing Next.js project, create /src/components/VerdictCard.js.
 
 This component receives:
@@ -214,6 +231,14 @@ when results are available.
 **Send when:** Prompt 3 is done and looks good in the browser.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists:
+• src/app/page.js — main page with textarea, Analyze button, state: newsText/isLoading/analysisResult/mutationResult
+• src/components/VerdictCard.js — shows verdict badge, confidence bar, summary, key arguments, collapsible full debate with sources. Already added to page.js, receives props from analysisResult.
+===============
+
 In the existing Next.js project, create /src/components/VulnerabilityScore.js.
 
 This component does NOT receive data from the API — it computes the score itself
@@ -283,6 +308,15 @@ Add this component to the main page, shown after the VerdictCard.
 **Send when:** Prompt 4 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists in src/components/:
+• VerdictCard.js — verdict badge, confidence, summary, key arguments, full debate (in page.js after input)
+• VulnerabilityScore.js — computes score from raw newsText client-side, breakdown table (in page.js after VerdictCard)
+page.js state: newsText, isLoading, analysisResult (from mockAnalysis), mutationResult (from mockMutation)
+===============
+
 In the existing Next.js project, create /src/components/MutationTimeline.js.
 
 This component receives: { versions }
@@ -326,6 +360,16 @@ Add this component to the main page after VulnerabilityScore.
 **Send when:** Prompt 5 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists in src/components/:
+• VerdictCard.js — verdict badge, confidence, summary, key arguments, collapsible full debate
+• VulnerabilityScore.js — client-side score computed from newsText
+• MutationTimeline.js — recharts line chart showing similarity drift across sources
+page.js shows these components in order after Analyze button is clicked, using mock data.
+===============
+
 In the existing Next.js project, create /src/components/SourceGraph.js.
 
 This component receives: { graph }
@@ -370,6 +414,17 @@ Add this component to the main page after MutationTimeline.
 **Send when:** Prompt 6 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists in src/components/:
+• VerdictCard.js — verdict badge, confidence, summary, key arguments, collapsible full debate
+• VulnerabilityScore.js — client-side score from newsText
+• MutationTimeline.js — recharts line chart (similarity drift)
+• SourceGraph.js — vis-network interactive graph (source credibility/propagation), uses 'use client'
+page.js shows all four in order after analysis. Mock data from src/lib/mockData.js.
+===============
+
 In the existing Next.js project, create /src/components/ViralityRisk.js.
 
 This component receives: { viralityRisk }
@@ -424,6 +479,20 @@ Then move to Prompt 8.
 **Send when:** Dev 1 AND Dev 2 have both confirmed their backends are running.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists in src/components/ (all added to page.js in this order):
+1. VerdictCard.js — receives {verdict, confidence, summary, prosecutorPoints, defenderPoints, prosecutorSources, defenderSources, prosecutorArgument, defenderArgument}
+2. VulnerabilityScore.js — receives {newsText}
+3. MutationTimeline.js — receives {versions}
+4. SourceGraph.js — receives {graph}
+5. ViralityRisk.js — receives {viralityRisk}
+src/app/page.js currently uses mock data (1500ms fake delay). State: newsText, isLoading, analysisResult, mutationResult.
+Backend 1: POST http://localhost:3001/api/analyze — body {text} — returns {verdict, confidence, summary, prosecutor_argument, defender_argument, prosecutor_sources, defender_sources, prosecutor_points, defender_points}
+Backend 2: POST http://localhost:3002/mutation — body {text} — returns {versions, graph, viralityRisk}
+===============
+
 In the existing Next.js project, replace the mock data logic in /src/app/page.js
 with real API calls to the two backends.
 
@@ -472,6 +541,13 @@ This makes the wait feel alive and shows the jury what's happening behind the sc
 **Send when:** Prompt 8 is done and the real API calls work end to end.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists: full UI with real API calls to localhost:3001 and localhost:3002.
+src/app/page.js has: textarea input, Analyze button, 5 result components (VerdictCard, VulnerabilityScore, MutationTimeline, SourceGraph, ViralityRisk), cycling loading messages, error handling.
+===============
+
 In the existing Next.js project, make these final improvements for the demo presentation:
 
 1. Add a "Demo cases" section above the main input area.
@@ -522,6 +598,14 @@ Senza questa chiave il codice verrà generato correttamente ma ogni click su "As
 **Send when:** Prompt 9 is done. This is the final feature — it requires an ElevenLabs API key.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — frontend (Next.js, port 3000)
+Working directory: frontend/
+Already exists: complete UI with demo cases, export button, polished styles.
+src/app/page.js has all 5 result components. src/components/VerdictCard.js shows verdict badge, confidence, summary, key arguments, full debate section.
+.env.local has ELEVENLABS_API_KEY (already filled in).
+===============
+
 In the existing Next.js project, add a "listen to verdict" feature powered by ElevenLabs TTS.
 ElevenLabs is the audio AI partner of this hackathon and supports Italian natively.
 

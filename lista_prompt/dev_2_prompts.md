@@ -1,12 +1,6 @@
-## ⚠️ Prima di iniziare — Leggi il contesto condiviso
-
-Incolla il contenuto del file `CLAUDE.md` (nella root del repo) come **primo messaggio** ad Antigravity prima di questo file. Contiene l'architettura completa, i JSON contract con gli altri servizi, e lo stack tecnico deciso.
-
-Se hai già lavorato in sessioni precedenti, incolla anche il contenuto di `.agent/skills/SKILL.md` (se esiste) subito dopo CLAUDE.md — contiene un log di tutto ciò che Antigravity ha già costruito, così non ricomincia da zero.
-
 ## 🔁 Routine dopo ogni prompt
 
-Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md` che Antigravity usa come memoria tra sessioni.
+Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md`.
 
 ---
 
@@ -81,6 +75,12 @@ Once everyone knows what to expect from each other, you can all work independent
 **Send when:** immediately after Step 0. No dependencies on anyone else.
 
 ```
+=== PROJECT ===
+Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
+Create this project inside a NEW folder called backend2/ in the current repo root.
+Do not create the project in the repo root itself — it must be inside backend2/.
+===============
+
 Create a Node.js backend project for a news mutation tracking system called Truth Engine Mutation.
 
 Project structure:
@@ -131,12 +131,21 @@ PORT=3002
 **Send when:** Prompt 1 is running and http://localhost:3002/health responds.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists:
+• src/index.js — Express server, GET /health returns {status:"ok"}, dotenv loaded, CORS enabled
+• .env — has SERPER_API_KEY and REGOLO_API_KEY (already filled in)
+• .gitignore — excludes node_modules/, .env
+===============
+
 In the existing project, create /src/utils/search.js.
 
 Export one async function: webSearch(query, numResults = 5)
 
 The function must:
-1. POST to <https://google.serper.dev/search>
+1. POST to https://google.serper.dev/search
 2. Headers: { "X-API-Key": process.env.SERPER_API_KEY, "Content-Type": "application/json" }
 3. Body: { q: query, num: numResults, gl: "it", hl: "it" }
 4. Return array: [{ title, url, snippet }]
@@ -170,6 +179,15 @@ At the bottom, add a self-test block (only runs when file is executed directly):
 **Send when:** Prompt 2 is done and the self-test shows multiple results.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists:
+• src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
+• src/utils/multisource.js — exports fetchVersions(newsText) → [{title, url, snippet, domain}] (max 15 items, deduped by URL)
+  Runs 3 parallel Serper searches per text, merges and deduplicates results
+===============
+
 In the existing project, create /src/utils/similarity.js.
 
 This module computes how semantically similar two texts are using REAL semantic embeddings
@@ -234,6 +252,15 @@ At the bottom of similarity.js, add a self-test (only runs when file is executed
 **Send when:** Prompt 3 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists:
+• src/utils/multisource.js — exports fetchVersions(newsText) → [{title, url, snippet, domain}]
+• src/utils/similarity.js — exports computeSimilarity(text1, text2) → float 0-1 (uses Regolo.ai embeddings with word-overlap fallback)
+• src/utils/mutation.js — exports computeMutationScores(originalText, versions) → versions array with added fields: similarity, mutationScore, isSource
+===============
+
 In the existing project, create /src/utils/credibility.js.
 
 Export one function: assessCredibility(domain)
@@ -273,6 +300,15 @@ For example, a .gov domain gets 95, ansa.it gets 92, a clean medium domain gets 
 **Send when:** Prompt 4 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists:
+• src/utils/multisource.js — exports fetchVersions(newsText) → [{title, url, snippet, domain}]
+• src/utils/mutation.js — exports computeMutationScores(originalText, versions) → versions with {similarity, mutationScore, isSource}
+• src/utils/credibility.js — exports assessCredibility(domain) → {score:0-100, level:"high"|"medium"|"low", color:"#hex"}
+===============
+
 In the existing project, create /src/utils/graph.js.
 
 Export one function: buildSourceGraph(versionsWithScores)
@@ -310,6 +346,16 @@ Add a self-test at the bottom (only runs when file is executed directly):
 **Send when:** Prompt 5 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists:
+• src/utils/multisource.js — fetchVersions(newsText) → [{title, url, snippet, domain}]
+• src/utils/mutation.js — computeMutationScores(originalText, versions) → versions with {similarity, mutationScore, isSource}
+• src/utils/credibility.js — assessCredibility(domain) → {score, level, color}
+• src/utils/graph.js — buildSourceGraph(versionsWithScores) → {nodes:[{id,label,color,size}], edges:[{from,to,label,arrows}]}
+===============
+
 In the existing project, create /src/utils/virality.js.
 
 Export one function: computeViralityRisk(newsText, versionsWithScores)
@@ -372,6 +418,18 @@ Return:
 **⚠️ Message Dev 3 when this is working — it unblocks their real API integration.**
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists (all in src/utils/):
+• multisource.js — fetchVersions(newsText) → [{title, url, snippet, domain}]
+• mutation.js — computeMutationScores(originalText, versions) → versions with {similarity, mutationScore, isSource}
+• credibility.js — assessCredibility(domain) → {score, level:"high"|"medium"|"low", color}
+• graph.js — buildSourceGraph(versionsWithCredibility) → {nodes, edges}
+• virality.js — computeViralityRisk(newsText, versionsWithCredibility) → {score, label, breakdown}
+• src/index.js — Express server on port 3002
+===============
+
 In the existing project, create /src/routes/mutation.js.
 
 Implement POST /mutation — the main endpoint that orchestrates all mutation analysis.
@@ -435,6 +493,14 @@ When Prompt 7 is working:
 **Send when:** Prompt 7 is done and Dev 3 confirmed integration works.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 2 (mutation tracking, source graph, virality risk)
+Working directory: backend2/  |  Runtime: Node.js  |  Port: 3002
+Already exists: full pipeline working. POST http://localhost:3002/mutation accepts {text} and returns
+{versions:[...], graph:{nodes,edges}, viralityRisk:{score,label,breakdown}}
+src/routes/mutation.js handles the endpoint, registered in src/index.js.
+===============
+
 In the existing Truth Engine mutation backend, add these robustness improvements:
 
 1. Timeout: if the full pipeline takes more than 20 seconds, return 408:

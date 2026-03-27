@@ -44,6 +44,12 @@ Once everyone knows what to expect from each other, you can all work independent
 **Send when:** immediately after Step 0. No dependencies on anyone else.
 
 ```
+=== PROJECT ===
+Truth Engine — hackathon Codemotion Rome AI Tech Week 2026.
+Create this project inside a NEW folder called backend1/ in the current repo root.
+Do not create the project in the repo root itself — it must be inside backend1/.
+===============
+
 Create a Node.js backend project for a fact-checking system called Truth Engine.
 
 Project structure:
@@ -97,6 +103,15 @@ Aggiorna anche `STATUS.md` nella root con le chiavi disponibili (NON committare 
 **Send when:** Prompt 1 is running and you can reach http://localhost:3001/health.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists:
+• src/index.js — Express server, GET /health returns {status:"ok"}, dotenv loaded, CORS enabled
+• .env — has REGOLO_API_KEY and SERPER_API_KEY (already filled in)
+• .gitignore — excludes node_modules/, .env
+===============
+
 In the existing Node.js project, create /src/utils/search.js.
 
 Export one async function: webSearch(query, numResults = 5)
@@ -123,6 +138,15 @@ At the bottom, add a self-test block that only runs when this file is executed d
 **Send when:** Prompt 2 is done and the self-test prints real results.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists:
+• src/index.js — Express server on port 3001
+• src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
+  Uses Serper API (POST https://google.serper.dev/search, header X-API-Key, gl:"it", hl:"it")
+===============
+
 In the existing project, create /src/agents/debate.js.
 
 This module implements two opposing AI agents using the Regolo.ai API (OpenAI-compatible,
@@ -176,6 +200,18 @@ On API error: return a string like "Agent error: [error message]" — never thro
 **Send when:** Prompt 3 is done.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists:
+• src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
+• src/agents/debate.js — exports:
+    runProsecutor(newsText, searchResults) → string (Italian argument against the article)
+    runDefender(newsText, searchResults) → string (Italian argument supporting the article)
+  Both call POST https://api.regolo.ai/v1/chat/completions, header "Authorization: Bearer REGOLO_API_KEY",
+  model "Llama-3.3-70B-Instruct", response at choices[0].message.content
+===============
+
 In the existing /src/agents/debate.js, add a third exported async function:
 
 runJudge(newsText, prosecutorArgument, defenderArgument)
@@ -227,6 +263,20 @@ After receiving the response:
 **⚠️ Message Dev 3 when this is working — it unblocks their real API integration.**
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists:
+• src/utils/search.js — exports webSearch(query, numResults=5) → [{title, url, snippet}]
+• src/agents/debate.js — exports:
+    runProsecutor(newsText, searchResults) → string
+    runDefender(newsText, searchResults) → string
+    runJudge(newsText, prosecutorArg, defenderArg) → {verdict, confidence, summary, prosecutor_points, defender_points}
+  All three call Regolo.ai (POST https://api.regolo.ai/v1/chat/completions, Bearer REGOLO_API_KEY,
+  model "Llama-3.3-70B-Instruct", response at choices[0].message.content)
+• src/index.js — Express server on port 3001, /health endpoint
+===============
+
 In the existing project, create /src/routes/analyze.js.
 
 Implement POST /analyze — the main Truth Engine pipeline endpoint.
@@ -300,6 +350,14 @@ When Prompt 5 is working:
 **Send when:** Prompt 5 is done and Dev 3 confirmed integration works.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists: full pipeline working. POST http://localhost:3001/api/analyze accepts {text} and returns
+{verdict, confidence, summary, prosecutor_argument, defender_argument, prosecutor_sources,
+defender_sources, prosecutor_points, defender_points}
+===============
+
 In the existing Truth Engine backend, create /src/scripts/runTests.js.
 
 This script tests the full pipeline on 4 different news types to verify the agents are calibrated correctly.
@@ -335,6 +393,13 @@ Fix: add to the judge prompt "Only use INCONCLUSIVE when you genuinely cannot de
 **Send when:** Prompt 6 tests pass. This is your last task.
 
 ```
+=== CONTEXT ===
+Project: Truth Engine — backend 1 (adversarial agents & verdict)
+Working directory: backend1/  |  Runtime: Node.js  |  Port: 3001
+Already exists: full pipeline working and stress-tested. src/routes/analyze.js handles POST /api/analyze.
+The pipeline runs: 2 parallel Serper searches → runProsecutor + runDefender in parallel → runJudge → JSON response.
+===============
+
 In the existing Truth Engine backend, add these production-level protections to src/routes/analyze.js:
 
 1. Request timeout: if the full pipeline takes more than 30 seconds, cancel it and return:

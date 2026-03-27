@@ -59,11 +59,14 @@ function CustomTooltip({ active, payload }) {
   );
 }
 
-export default function MutationTimeline({ versions }) {
+export default function MutationTimeline({ versions, verdictColor }) {
   if (!versions || versions.length < 2) {
     return (
-      <div className="bg-[#161b2b] rounded-[8px] p-[24px]">
-        <p className="text-[#8c909f] text-[14px]">
+      <div
+        className="bg-[#161b2b] rounded-[8px] p-[24px]"
+        style={{ borderLeft: verdictColor ? `4px solid ${verdictColor}` : undefined }}
+      >
+        <p className="text-[#8c909f] text-[15px]">
           Not enough source versions found to build a timeline.
         </p>
       </div>
@@ -79,7 +82,10 @@ export default function MutationTimeline({ versions }) {
   };
 
   return (
-    <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[16px]">
+    <div
+      className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[16px]"
+      style={{ borderLeft: verdictColor ? `4px solid ${verdictColor}` : undefined }}
+    >
       {/* Header */}
       <div>
         <h2 className="font-bold text-[20px] text-white tracking-[-0.5px] leading-[28px]">

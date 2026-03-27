@@ -15,6 +15,29 @@ const LOADING_MESSAGES = [
   'Computing virality risk...',
 ];
 
+const VERDICT_COLORS = {
+  VERIFIED:       '#68dbae',
+  PARTIALLY_TRUE: '#ba7517',
+  INCONCLUSIVE:   '#8c909f',
+  MISLEADING:     '#ffb4ab',
+  FALSE:          '#ff4444',
+};
+
+const DEMO_CASES = [
+  {
+    label: 'Case 1: False with high mutation',
+    text: 'BREAKING: Scienziati italiani hanno dimostrato che il 5G causa perdita di memoria a breve termine. Uno studio rivoluzionario dell\'Università di Palermo ha esaminato 12 persone e i risultati sono devastanti. Il governo vuole censurare questa notizia. Condividi subito prima che sparisca.',
+  },
+  {
+    label: 'Case 2: True but manipulative',
+    text: 'Il Parlamento italiano ha approvato ieri la legge di bilancio con 312 voti favorevoli e 201 contrari. La manovra prevede un aumento del 3% delle pensioni minime. I pensionati dovranno però pagare più tasse sui risparmi. La sinistra ha già annunciato ricorso alla Corte Costituzionale.',
+  },
+  {
+    label: 'Case 3: Inconclusive',
+    text: 'Secondo alcune fonti mediche, il nuovo vaccino anti-influenzale stagionale potrebbe causare effetti collaterali neurologici in soggetti geneticamente predisposti. I dati sono ancora in fase di analisi e la comunità scientifica è divisa. Le autorità sanitarie invitano alla calma.',
+  },
+];
+
 export default function Home() {
   const [newsText, setNewsText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +60,23 @@ export default function Home() {
     }
     return () => clearInterval(loadingIntervalRef.current);
   }, [isLoading]);
+
+  const handleExport = () => {
+    if (!analysisResult) return;
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      inputText: newsText,
+      analysis: analysisResult,
+      mutation: mutationResult,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `truth-engine-report-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleAnalyze = async () => {
     if (newsText.trim().length < 20) {
@@ -145,6 +185,22 @@ export default function Home() {
         <main className="flex-1 px-[40px] py-[48px]">
           <div className="max-w-[800px] mx-auto flex flex-col gap-[24px]">
 
+            {/* Demo cases */}
+            <div className="flex flex-col gap-[10px]">
+              <span className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#8c909f]">Demo cases</span>
+              <div className="flex flex-wrap gap-[8px]">
+                {DEMO_CASES.map((c) => (
+                  <button
+                    key={c.label}
+                    onClick={() => setNewsText(c.text)}
+                    className="text-[15px] px-[14px] py-[8px] rounded-[6px] bg-[#1a1f2f] border border-[rgba(173,198,255,0.15)] text-[#adc6ff] hover:bg-[#25293a] hover:border-[rgba(173,198,255,0.35)] transition-colors text-left"
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Input section */}
             <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[16px]">
               <label htmlFor="news-input" className="font-semibold text-[18px] text-white leading-[28px]">
@@ -197,7 +253,7 @@ export default function Home() {
 
             {/* Results */}
             {!isLoading && analysisResult && (
-              <div ref={resultsRef}>
+              <div ref={resultsRef} className="flex flex-col gap-[24px]">
                 {/* Verdict Card */}
                 <VerdictCard
                   verdict={analysisResult.verdict}
@@ -212,28 +268,57 @@ export default function Home() {
                 />
 
                 {/* Vulnerability Score */}
-                <VulnerabilityScore newsText={newsText} />
+                <VulnerabilityScore
+                  newsText={newsText}
+                  verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                />
 
                 {/* Mutation Timeline */}
                 {mutationResult && (
-                  <MutationTimeline versions={mutationResult.versions} />
+                  <MutationTimeline
+                    versions={mutationResult.versions}
+                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                  />
                 )}
 
                 {/* Source Graph */}
                 {mutationResult && (
-                  <SourceGraph graph={mutationResult.graph} />
+                  <SourceGraph
+                    graph={mutationResult.graph}
+                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                  />
                 )}
 
                 {/* Virality Risk */}
                 {mutationResult && (
-                  <ViralityRisk viralityRisk={mutationResult.viralityRisk} />
+                  <ViralityRisk
+                    viralityRisk={mutationResult.viralityRisk}
+                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                  />
                 )}
+
+                {/* Export button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleExport}
+                    className="text-[15px] px-[20px] py-[10px] rounded-[6px] bg-[#1a1f2f] border border-[rgba(173,198,255,0.2)] text-[#adc6ff] hover:bg-[#25293a] hover:border-[rgba(173,198,255,0.4)] transition-colors font-medium"
+                  >
+                    Export full report (JSON)
+                  </button>
+                </div>
 
               </div>
             )}
 
           </div>
         </main>
+
+        {/* Footer */}
+        <footer className="px-[40px] py-[16px] border-t border-[rgba(66,71,84,0.15)] text-center">
+          <span className="text-[13px] tracking-[0.65px] text-[#8c909f]">
+            Truth Engine — Codemotion Rome AI Tech Week 2026 | Hackathon
+          </span>
+        </footer>
       </div>
     </div>
   );

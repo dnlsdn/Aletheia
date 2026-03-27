@@ -16,7 +16,7 @@ function deriveStats(graph) {
   return { total, high, low };
 }
 
-export default function SourceGraph({ graph }) {
+export default function SourceGraph({ graph, verdictColor }) {
   const containerRef = useRef(null);
   const networkRef = useRef(null);
 
@@ -107,7 +107,10 @@ export default function SourceGraph({ graph }) {
   const stats = deriveStats(graph);
 
   return (
-    <div className="bg-[#161b2b] rounded-[8px] overflow-hidden">
+    <div
+      className="bg-[#161b2b] rounded-[8px] overflow-hidden"
+      style={{ borderLeft: verdictColor ? `4px solid ${verdictColor}` : undefined }}
+    >
       {/* Header */}
       <div className="px-[24px] pt-[24px] pb-[20px] border-b border-[rgba(66,71,84,0.15)]">
         <div className="flex items-start justify-between gap-[16px]">

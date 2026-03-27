@@ -14,7 +14,7 @@ function scoreColor(score) {
   return '#E24B4A';
 }
 
-export default function ViralityRisk({ viralityRisk }) {
+export default function ViralityRisk({ viralityRisk, verdictColor }) {
   if (!viralityRisk) return null;
 
   const { score, label, breakdown } = viralityRisk;
@@ -22,7 +22,10 @@ export default function ViralityRisk({ viralityRisk }) {
   const maxBreakdownValue = Math.max(...Object.values(breakdown), 1);
 
   return (
-    <div className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[24px]">
+    <div
+      className="bg-[#161b2b] rounded-[8px] p-[24px] flex flex-col gap-[24px]"
+      style={{ borderLeft: verdictColor ? `4px solid ${verdictColor}` : undefined }}
+    >
 
       {/* Header */}
       <div>
@@ -46,7 +49,7 @@ export default function ViralityRisk({ viralityRisk }) {
       <p className="text-[15px] text-[#dee1f7] leading-[22px] -mt-[12px]">{label}</p>
 
       {/* Explanation */}
-      <p className="text-[13px] text-[#8c909f] leading-[20px] border-t border-[rgba(66,71,84,0.2)] pt-[16px]">
+      <p className="text-[15px] text-[#8c909f] leading-[22px] border-t border-[rgba(66,71,84,0.2)] pt-[16px]">
         This score estimates how quickly this article would spread before an effective debunk could contain it.
         A high score does not mean the article is false — it means it is structurally optimized for sharing.
       </p>
@@ -60,7 +63,7 @@ export default function ViralityRisk({ viralityRisk }) {
           const pct = (pts / maxBreakdownValue) * 100;
           return (
             <div key={key} className="bg-[#1a1f2f] px-[16px] py-[12px] flex items-center gap-[16px]">
-              <span className="text-[13px] text-[#c2c6d6] leading-[20px] w-[260px] flex-shrink-0">
+              <span className="text-[15px] text-[#c2c6d6] leading-[22px] w-[260px] flex-shrink-0">
                 {BREAKDOWN_LABELS[key] ?? key}
               </span>
               <div className="flex items-center gap-[12px] flex-1">

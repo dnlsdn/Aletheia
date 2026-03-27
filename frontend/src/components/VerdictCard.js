@@ -32,7 +32,10 @@ export default function VerdictCard({
   const barColor = confidenceBarColor(confidence);
 
   return (
-    <div className="bg-[#161b2b] rounded-[8px] overflow-hidden w-full">
+    <div
+      className="bg-[#161b2b] rounded-[8px] overflow-hidden w-full"
+      style={{ borderLeft: `4px solid ${config.accentColor}` }}
+    >
       <div className="flex flex-col gap-[24px] p-[24px]">
 
         {/* 1. Verdict badge + Confidence bar */}
@@ -62,7 +65,7 @@ export default function VerdictCard({
           className="bg-[#1a1f2f] rounded-[8px] pl-[22px] pr-[20px] py-[18px] border-l-2"
           style={{ borderColor: config.accentColor }}
         >
-          <p className="text-[#c2c6d6] text-[14px] leading-[22.75px]">{summary}</p>
+          <p className="text-[#c2c6d6] text-[15px] leading-[23px]">{summary}</p>
         </div>
 
         {/* 3. Key arguments — two columns */}
@@ -73,7 +76,7 @@ export default function VerdictCard({
               {prosecutorPoints?.map((point, i) => (
                 <li key={i} className="flex gap-[12px] items-start">
                   <span className="mt-[6px] w-[8px] h-[8px] rounded-full bg-[#ffb4ab] flex-shrink-0" />
-                  <span className="text-[#dee1f7] text-[14px] leading-[20px]">{point}</span>
+                  <span className="text-[#dee1f7] text-[15px] leading-[22px]">{point}</span>
                 </li>
               ))}
             </ul>
@@ -84,7 +87,7 @@ export default function VerdictCard({
               {defenderPoints?.map((point, i) => (
                 <li key={i} className="flex gap-[12px] items-start">
                   <span className="mt-[6px] w-[8px] h-[8px] rounded-full bg-[#68dbae] flex-shrink-0" />
-                  <span className="text-[#dee1f7] text-[14px] leading-[20px]">{point}</span>
+                  <span className="text-[#dee1f7] text-[15px] leading-[22px]">{point}</span>
                 </li>
               ))}
             </ul>
@@ -107,7 +110,7 @@ export default function VerdictCard({
                 <div className="border-l-2 border-[#ffb4ab] pl-[18px] py-[8px] flex flex-col gap-[8px]">
                   <span className="text-[12px] font-bold uppercase text-[#ffb4ab]">Prosecution Case</span>
                   <div
-                    className="text-[13px] text-[#c2c6d6] leading-[19.5px] overflow-y-auto"
+                    className="text-[15px] text-[#c2c6d6] leading-[22px] overflow-y-auto"
                     style={{ maxHeight: 200 }}
                   >
                     {prosecutorArgument}
@@ -138,7 +141,7 @@ export default function VerdictCard({
                 <div className="border-l-2 border-[#68dbae] pl-[18px] py-[8px] flex flex-col gap-[8px]">
                   <span className="text-[12px] font-bold uppercase text-[#68dbae]">Defense Case</span>
                   <div
-                    className="text-[13px] text-[#c2c6d6] leading-[19.5px] overflow-y-auto"
+                    className="text-[15px] text-[#c2c6d6] leading-[22px] overflow-y-auto"
                     style={{ maxHeight: 200 }}
                   >
                     {defenderArgument}

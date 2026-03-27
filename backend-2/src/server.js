@@ -13,16 +13,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'backend-2', port: PORT });
 });
 
-// Main endpoint — Mutation tracking + source graph
-// POST /mutation
-// Body: { "text": "testo della notizia" }
-app.post('/mutation', async (req, res) => {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ error: 'Missing "text" field' });
-
-  // TODO: implement mutation tracking + embeddings (Dev 2 prompts)
-  res.status(501).json({ error: 'Not implemented yet' });
-});
+const mutationRouter = require('./routes/mutation');
+app.use('/', mutationRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend 2 running on http://localhost:${PORT}`);

@@ -2,6 +2,12 @@
 
 Incolla il contenuto del file `CLAUDE.md` (nella root del repo) come **primo messaggio** ad Antigravity prima di questo file. Contiene l'architettura completa, i JSON contract con gli altri servizi, e lo stack tecnico deciso.
 
+Se hai già lavorato in sessioni precedenti, incolla anche il contenuto di `.agent/skills/SKILL.md` (se esiste) subito dopo CLAUDE.md — contiene un log di tutto ciò che Antigravity ha già costruito, così non ricomincia da zero.
+
+## 🔁 Routine dopo ogni prompt
+
+Dopo che Antigravity completa ogni prompt e il codice funziona, invia **un messaggio aggiuntivo** con il contenuto del file `lista_prompt/update_antigravity.md`. Questo aggiorna il log `.agent/skills/SKILL.md` che Antigravity usa come memoria tra sessioni.
+
 ---
 
 ## Your role: Backend — Mutation Tracking, Source Graph & Virality Risk
@@ -89,6 +95,12 @@ SERPER_API_KEY=
 REGOLO_API_KEY=
 PORT=3002
 
+Create a .gitignore file with these entries:
+node_modules/
+.env
+.env.local
+*.log
+
 In src/index.js:
 - Load dotenv at the very top
 - Set up Express with CORS enabled for all origins
@@ -97,6 +109,20 @@ In src/index.js:
 - Add GET /health that returns: { status: "ok", service: "truth-engine-mutation" }
 - Log "Truth Engine mutation backend running on port 3002" on startup
 ```
+
+---
+
+## ⛔ STOP — API Keys (fare prima di Prompt 2)
+
+Prima di continuare, apri il file `.env` creato da Antigravity e inserisci le chiavi reali:
+
+```
+SERPER_API_KEY=la_tua_chiave_da_serper.dev  ← chiedi a Dev 1 se non ce l'hai
+REGOLO_API_KEY=la_tua_chiave_da_dashboard.regolo.ai  ← chiedi a Dev 1 se non ce l'hai
+PORT=3002
+```
+
+**Senza SERPER_API_KEY, Prompt 2 ritorna `[]` silenziosamente e tutto sembrerà funzionare ma non ci saranno versioni da analizzare. Senza REGOLO_API_KEY, il Prompt 3 (embeddings) farà fallback automatico su word-overlap.**
 
 ---
 

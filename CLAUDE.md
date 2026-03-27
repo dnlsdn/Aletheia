@@ -104,6 +104,11 @@ Non modificare questi contratti senza sincronizzarsi con tutti e tre i dev.
 }
 ```
 
+## Memoria delle sessioni precedenti
+
+- `.agent/skills/SKILL.md` — log aggiornato dopo ogni prompt completato da tutti e 3 i dev. Se esiste, leggilo per sapere cosa è già stato costruito prima di iniziare a lavorare.
+- `STATUS.md` — stato dei sync point: quali backend sono live, esempi JSON reali.
+
 ## Note importanti
 
 - I prompt in `lista_prompt/` sono progettati per **Google Antigravity** (vibecoding — ogni prompt va incollato e lasciato girare prima di passare al successivo)

@@ -59,6 +59,12 @@ REGOLO_API_KEY=
 SERPER_API_KEY=
 PORT=3001
 
+Create a .gitignore file with these entries:
+node_modules/
+.env
+.env.local
+*.log
+
 In src/index.js:
 - Load dotenv at the very top
 - Set up Express with CORS enabled for all origins
@@ -67,6 +73,22 @@ In src/index.js:
 - Add GET /health that returns: { status: "ok", service: "truth-engine-agents" }
 - Log "Truth Engine agents backend running on port 3001" on startup
 ```
+
+---
+
+## ⛔ STOP — API Keys (fare prima di Prompt 2)
+
+Prima di continuare, apri il file `.env` creato da Antigravity e inserisci le chiavi reali:
+
+```
+REGOLO_API_KEY=la_tua_chiave_da_dashboard.regolo.ai
+SERPER_API_KEY=la_tua_chiave_da_serper.dev
+PORT=3001
+```
+
+**Senza queste chiavi, Prompt 2 eseguirà web search che ritorna `[]` silenziosamente — tutto sembrerà funzionare ma gli agenti non avranno fonti e produrranno verdetti casuali.**
+
+Aggiorna anche `STATUS.md` nella root con le chiavi disponibili (NON committare le chiavi nel repo — aggiorna solo la riga "Chi la fornisce").
 
 ---
 

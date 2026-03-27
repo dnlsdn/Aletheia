@@ -60,7 +60,7 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 - [x] **Dev 1 — Prompt 4**: aggiungere `runJudge` a `debate.js` — risposta JSON con fallback
 - [x] **Dev 1 — Prompt 5**: `src/routes/analyze.js` — pipeline completa `POST /api/analyze`
       → verifica con curl (vedi sotto)
-- [ ] **Dev 1 — Prompt 6**: `src/scripts/runTests.js` — stress test 4 casi, calibrazione Judge
+- [x] **Dev 1 — Prompt 6**: `src/scripts/runTests.js` — stress test 4 casi, calibrazione Judge
 - [ ] **Dev 1 — Prompt 7**: hardening — timeout 30s, rate limit, logging, CORS
 
 **✅ CHECKPOINT FASE 2**:

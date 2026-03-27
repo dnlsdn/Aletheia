@@ -74,14 +74,19 @@ const JUDGE_SYSTEM_PROMPT =
   '  "prosecutor_points": ["strongest point from the prosecution", "second strongest point"],\n' +
   '  "defender_points": ["strongest point from the defense", "second strongest point"]\n' +
   '}\n\n' +
-  'Verdict values and when to use them:\n' +
-  '- VERIFIED: use only when confidence >= 80 and sources clearly confirm the article\n' +
-  '- PARTIALLY_TRUE: article has real elements mixed with inaccuracies or missing context\n' +
-  '- INCONCLUSIVE: genuine credible evidence exists on both sides — this is the honest answer when unsure\n' +
-  '- MISLEADING: the article is technically not false but is framed to create a wrong impression\n' +
-  '- FALSE: use only when confidence >= 75 and sources clearly contradict the article\n\n' +
-  'The confidence score must reflect actual certainty: do not cluster everything between 55-70.\n' +
-  'Use the full range. Only use INCONCLUSIVE when you genuinely cannot decide after weighing all evidence.';
+  'Verdict values — read carefully, these are MUTUALLY EXCLUSIVE:\n' +
+  '- VERIFIED: the core claims are confirmed by reliable sources, confidence >= 80\n' +
+  '- PARTIALLY_TRUE: specific claims are verified true AND other specific claims are verified false or missing crucial context — both sides have concrete evidence\n' +
+  '- INCONCLUSIVE: the article makes claims that are speculative, unverified, or explicitly "still under analysis" — use this when the article itself admits uncertainty or when no sources confirm OR deny the claim\n' +
+  '- MISLEADING: the facts stated are real but are selectively framed, exaggerated, or decontextualised to create a false impression — use this when a real quote or real statistic is used deceptively\n' +
+  '- FALSE: the core factual claim is directly contradicted by reliable sources, confidence >= 75\n\n' +
+  'CRITICAL DISTINCTIONS:\n' +
+  '- If an article reports speculation or unverified data ("according to some sources", "data still being analyzed", "might cause") → INCONCLUSIVE, not PARTIALLY_TRUE\n' +
+  '- If an article quotes a real statement but the statement is numerically wrong vs official data → MISLEADING, not FALSE (the article may be accurately reporting a misleading claim)\n' +
+  '- Do not use FALSE when the article is accurate but deceptive — use MISLEADING\n' +
+  '- Do not use PARTIALLY_TRUE for speculative articles — use INCONCLUSIVE\n\n' +
+  'The confidence score must reflect actual certainty: use the full range, not just 55-70.\n' +
+  'Only use INCONCLUSIVE when you genuinely cannot decide after weighing all evidence.';
 
 const JUDGE_FALLBACK = {
   verdict: 'INCONCLUSIVE',

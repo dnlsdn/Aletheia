@@ -1,0 +1,14 @@
+{
+  "name": "truth-engine",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"B1,B2,FE\" --prefix-colors \"cyan,magenta,green\" \"npm run dev --prefix backend-1\" \"npm run dev --prefix backend-2\" \"npm run dev --prefix frontend\"",
+    "install:all": "npm install --prefix backend-1 && npm install --prefix backend-2 && npm install --prefix frontend && npm install",
+    "b1": "npm run dev --prefix backend-1",
+    "b2": "npm run dev --prefix backend-2",
+    "fe": "npm run dev --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

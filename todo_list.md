@@ -39,7 +39,7 @@ Dev 3 (frontend) prima perché non ha bisogno di API keys o backend attivi — c
 - [x] **Dev 3 — Prompt 1** *(adattato)*: creare solo `src/lib/mockData.js` con `mockAnalysis` e `mockMutation`
       → il resto del setup è già fatto, non serve ricreare il progetto Next.js
 - [x] **Dev 3 — Prompt 2**: main page layout + textarea + bottone Analyze (mock delay 1500ms)
-- [ ] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)
+- [x] **Dev 3 — Prompt 3**: componente `VerdictCard` (badge, confidence bar, full debate collapsibile)
 - [ ] **Dev 3 — Prompt 4**: componente `VulnerabilityScore` (calcolato lato client dal testo)
 - [ ] **Dev 3 — Prompt 5**: componente `MutationTimeline` (recharts line chart)
 - [ ] **Dev 3 — Prompt 6**: componente `SourceGraph` (vis-network, usa `'use client'`)

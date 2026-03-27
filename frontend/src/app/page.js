@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { mockAnalysis, mockMutation } from '@/lib/mockData';
+import VerdictCard from '@/components/VerdictCard';
 
 export default function Home() {
   const [newsText, setNewsText] = useState('');
@@ -83,43 +84,17 @@ export default function Home() {
         {!isLoading && analysisResult && (
           <section className="space-y-6">
             {/* Verdict card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Verdict</h2>
-              <VerdictBadge verdict={analysisResult.verdict} confidence={analysisResult.confidence} />
-              <p className="mt-6 text-gray-700 text-base leading-relaxed">{analysisResult.summary}</p>
-            </div>
-
-            {/* Arguments */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                <h3 className="font-bold text-red-700 text-lg mb-3">Prosecutor</h3>
-                <p className="text-gray-700 text-sm leading-relaxed">{analysisResult.prosecutor_argument}</p>
-                {analysisResult.prosecutor_points?.length > 0 && (
-                  <ul className="mt-4 space-y-1">
-                    {analysisResult.prosecutor_points.map((point, i) => (
-                      <li key={i} className="text-red-700 text-sm flex gap-2">
-                        <span className="mt-0.5">•</span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
-                <h3 className="font-bold text-green-700 text-lg mb-3">Defender</h3>
-                <p className="text-gray-700 text-sm leading-relaxed">{analysisResult.defender_argument}</p>
-                {analysisResult.defender_points?.length > 0 && (
-                  <ul className="mt-4 space-y-1">
-                    {analysisResult.defender_points.map((point, i) => (
-                      <li key={i} className="text-green-700 text-sm flex gap-2">
-                        <span className="mt-0.5">•</span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
+            <VerdictCard
+              verdict={analysisResult.verdict}
+              confidence={analysisResult.confidence}
+              summary={analysisResult.summary}
+              prosecutorPoints={analysisResult.prosecutor_points}
+              defenderPoints={analysisResult.defender_points}
+              prosecutorSources={analysisResult.prosecutor_sources}
+              defenderSources={analysisResult.defender_sources}
+              prosecutorArgument={analysisResult.prosecutor_argument}
+              defenderArgument={analysisResult.defender_argument}
+            />
 
             {/* Mutation tracking placeholder */}
             {mutationResult && (
@@ -176,30 +151,6 @@ export default function Home() {
           </section>
         )}
       </main>
-    </div>
-  );
-}
-
-function VerdictBadge({ verdict, confidence }) {
-  const config = {
-    VERIFIED:       { bg: 'bg-green-100',  text: 'text-green-800',  border: 'border-green-300',  label: 'VERIFIED' },
-    PARTIALLY_TRUE: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', label: 'PARTIALLY TRUE' },
-    INCONCLUSIVE:   { bg: 'bg-gray-100',   text: 'text-gray-700',   border: 'border-gray-300',   label: 'INCONCLUSIVE' },
-    MISLEADING:     { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', label: 'MISLEADING' },
-    FALSE:          { bg: 'bg-red-100',    text: 'text-red-800',    border: 'border-red-300',    label: 'FALSE' },
-  };
-  const c = config[verdict] ?? config.INCONCLUSIVE;
-
-  return (
-    <div className="flex items-center gap-4">
-      <span
-        className={`inline-block px-5 py-2 rounded-full text-lg font-bold border ${c.bg} ${c.text} ${c.border}`}
-      >
-        {c.label}
-      </span>
-      <span className="text-gray-500 text-base">
-        Confidence: <span className="font-semibold text-gray-700">{confidence}%</span>
-      </span>
     </div>
   );
 }

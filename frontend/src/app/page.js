@@ -49,6 +49,8 @@ export default function Home() {
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const resultsRef = useRef(null);
   const loadingIntervalRef = useRef(null);
+  const [systemStatus, setSystemStatus] = useState({ label: 'CHECKING...', color: '#8c909f' });
+  const abortRef = useRef(null);
 
   useEffect(() => {
     if (isLoading) {
@@ -61,6 +63,26 @@ export default function Home() {
     }
     return () => clearInterval(loadingIntervalRef.current);
   }, [isLoading]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    Promise.allSettled([
+      fetch('http://localhost:3001/health', { signal: controller.signal }),
+      fetch('http://localhost:3002/health', { signal: controller.signal }),
+    ]).then(([r1, r2]) => {
+      clearTimeout(timeout);
+      const ok1 = r1.status === 'fulfilled' && r1.value.ok;
+      const ok2 = r2.status === 'fulfilled' && r2.value.ok;
+      if (ok1 && ok2)       setSystemStatus({ label: 'OPERATIONAL', color: '#68dbae' });
+      else if (ok1 || ok2)  setSystemStatus({ label: 'DEGRADED',    color: '#ba7517' });
+      else                  setSystemStatus({ label: 'OFFLINE',     color: '#ff6b6b' });
+    });
+
+    return () => { clearTimeout(timeout); controller.abort(); };
+  }, []);
 
   const handleExport = () => {
     if (!analysisResult) return;
@@ -143,15 +165,6 @@ export default function Home() {
           <a className="flex items-center pl-[32px] pr-[34px] py-[16px] bg-[#1a1f2f] border-r-2 border-[#adc6ff] cursor-pointer">
             <span className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#adc6ff]">ANALYZE</span>
           </a>
-          <a className="flex items-center px-[32px] py-[16px] opacity-70 cursor-pointer">
-            <span className="text-[11px] tracking-[1.1px] uppercase text-[#c2c6d6]">SOURCES</span>
-          </a>
-          <a className="flex items-center px-[32px] py-[16px] opacity-70 cursor-pointer">
-            <span className="text-[11px] tracking-[1.1px] uppercase text-[#c2c6d6]">ARCHIVE</span>
-          </a>
-          <a className="flex items-center px-[32px] py-[16px] opacity-70 cursor-pointer">
-            <span className="text-[11px] tracking-[1.1px] uppercase text-[#c2c6d6]">SETTINGS</span>
-          </a>
         </nav>
 
         {/* System Status */}
@@ -159,8 +172,8 @@ export default function Home() {
           <div className="bg-[rgba(47,52,69,0.2)] rounded-[8px] px-[16px] py-[15px] flex flex-col gap-[8px]">
             <span className="text-[9.6px] tracking-[0.96px] uppercase text-[#8c909f]">System Status</span>
             <div className="flex items-center gap-[8px]">
-              <span className="w-[6px] h-[6px] rounded-full bg-[#68dbae] flex-shrink-0" />
-              <span className="font-mono text-[11px] text-[#68dbae]">OPERATIONAL</span>
+              <span className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ backgroundColor: systemStatus.color }} />
+              <span className="font-mono text-[11px]" style={{ color: systemStatus.color }}>{systemStatus.label}</span>
             </div>
           </div>
         </div>

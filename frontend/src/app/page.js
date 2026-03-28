@@ -46,6 +46,7 @@ export default function Home() {
   const [mutationResult, setMutationResult] = useState(null);
   const [error, setError] = useState(null);
   const [inputError, setInputError] = useState(false);
+  const [mutationWarning, setMutationWarning] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const resultsRef = useRef(null);
   const loadingIntervalRef = useRef(null);
@@ -113,7 +114,9 @@ export default function Home() {
     setMutationResult(null);
 
     try {
-      const [analysisRes, mutationRes] = await Promise.all([
+      setMutationWarning(false);
+
+      const [analysisSettled, mutationSettled] = await Promise.allSettled([
         fetch('http://localhost:3001/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -126,17 +129,21 @@ export default function Home() {
         }),
       ]);
 
-      if (!analysisRes.ok || !mutationRes.ok) {
-        throw new Error(`API error: ${analysisRes.status} / ${mutationRes.status}`);
+      if (analysisSettled.status === 'rejected' || !analysisSettled.value.ok) {
+        throw new Error('Analysis service unavailable. Please check backend-1 (port 3001).');
       }
 
-      const [analysis, mutation] = await Promise.all([
-        analysisRes.json(),
-        mutationRes.json(),
-      ]);
-
+      const analysis = await analysisSettled.value.json();
       setAnalysisResult(analysis);
-      setMutationResult(mutation);
+
+      if (mutationSettled.status === 'fulfilled' && mutationSettled.value.ok) {
+        const mutation = await mutationSettled.value.json();
+        setMutationResult(mutation);
+      } else {
+        setMutationResult(null);
+        setMutationWarning(true);
+      }
+
       setIsLoading(false);
 
       setTimeout(() => {
@@ -285,6 +292,12 @@ export default function Home() {
                   summary={analysisResult.summary}
                   confidence={analysisResult.confidence}
                 />
+
+                {mutationWarning && (
+                  <div className="bg-[rgba(186,117,23,0.1)] border border-[rgba(186,117,23,0.3)] rounded-[6px] px-[14px] py-[10px] text-[13px] text-[#ba7517]">
+                    Mutation tracking unavailable — backend-2 did not respond. Showing fact-check analysis only.
+                  </div>
+                )}
 
                 {/* Vulnerability Score */}
                 <VulnerabilityScore

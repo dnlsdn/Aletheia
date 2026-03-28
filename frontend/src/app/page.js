@@ -16,6 +16,19 @@ const LOADING_MESSAGES = [
   'Computing virality risk...',
 ];
 
+const URL_LOADING_MESSAGES = [
+  'Fetching article from URL...',
+  'Searching for sources...',
+  'Running adversarial debate between agents...',
+  'Evaluating judge verdict...',
+  'Building source credibility graph...',
+  'Computing virality risk...',
+];
+
+function isUrl(str) {
+  return /^https?:\/\/.+/i.test(str.trim());
+}
+
 const VERDICT_COLORS = {
   VERIFIED:       '#68dbae',
   PARTIALLY_TRUE: '#ba7517',
@@ -53,13 +66,16 @@ export default function Home() {
   const analysisStartRef = useRef(null);
   const loadingIntervalRef = useRef(null);
   const [systemStatus, setSystemStatus] = useState({ label: 'CHECKING...', color: '#8c909f' });
+  const [analysisText, setAnalysisText] = useState('');
   const abortRef = useRef(null);
+  const isUrlModeRef = useRef(false);
 
   useEffect(() => {
     if (isLoading) {
       setLoadingMsgIndex(0);
+      const messages = isUrlModeRef.current ? URL_LOADING_MESSAGES : LOADING_MESSAGES;
       loadingIntervalRef.current = setInterval(() => {
-        setLoadingMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+        setLoadingMsgIndex((i) => (i + 1) % messages.length);
       }, 2000);
     } else {
       clearInterval(loadingIntervalRef.current);
@@ -105,31 +121,54 @@ export default function Home() {
   };
 
   const handleAnalyze = async () => {
-    if (newsText.trim().length < 20) {
+    const trimmed = newsText.trim();
+    if (!isUrl(trimmed) && trimmed.length < 20) {
       setInputError(true);
       return;
     }
     setInputError(false);
     setError(null);
+
+    isUrlModeRef.current = isUrl(trimmed);
     analysisStartRef.current = Date.now();
     setIsLoading(true);
     setAnalysisResult(null);
     setAnalysisTime(null);
     setMutationResult(null);
+    setAnalysisText('');
 
     try {
       setMutationWarning(false);
+
+      let textToAnalyze = trimmed;
+
+      if (isUrl(trimmed)) {
+        const fetchRes = await fetch('/api/fetch-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: trimmed }),
+        });
+        const fetchData = await fetchRes.json();
+        if (!fetchRes.ok) {
+          setError(fetchData.error ?? 'Failed to fetch the URL. Please paste the text directly.');
+          setIsLoading(false);
+          return;
+        }
+        textToAnalyze = fetchData.text;
+      }
+
+      setAnalysisText(textToAnalyze);
 
       const [analysisSettled, mutationSettled] = await Promise.allSettled([
         fetch('http://localhost:3001/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: newsText }),
+          body: JSON.stringify({ text: textToAnalyze }),
         }),
         fetch('http://localhost:3002/mutation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: newsText }),
+          body: JSON.stringify({ text: textToAnalyze }),
         }),
       ]);
 
@@ -233,13 +272,19 @@ export default function Home() {
                 Paste a news article or claim to analyze
               </label>
               <div className="bg-[#090e1c] rounded-[8px] px-[16px] pt-[16px] pb-[8px]">
+                <div
+                  className="font-mono text-[9.6px] tracking-[0.96px] uppercase text-[#68dbae] mb-[8px] transition-opacity duration-200"
+                  style={{ opacity: isUrl(newsText) ? 1 : 0, pointerEvents: 'none' }}
+                >
+                  ↗ URL DETECTED
+                </div>
                 <textarea
                   id="news-input"
                   value={newsText}
                   onChange={(e) => setNewsText(e.target.value)}
                   maxLength={3000}
                   rows={6}
-                  placeholder="Paste the full text of the news article here..."
+                  placeholder="Paste a news article or a URL to analyze..."
                   className="w-full bg-transparent text-[16px] text-white placeholder:text-[rgba(140,144,159,0.4)] focus:outline-none resize-none leading-[24px]"
                 />
               </div>
@@ -248,7 +293,7 @@ export default function Home() {
               )}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] tracking-[0.55px] uppercase text-[#8c909f]">
-                  {newsText.length} / 3000 characters
+                  {isUrl(newsText) ? '' : `${newsText.length} / 3000 characters`}
                 </span>
                 <button
                   onClick={handleAnalyze}
@@ -272,7 +317,7 @@ export default function Home() {
               <div className="text-center py-16">
                 <div className="inline-block w-8 h-8 border-4 border-[#adc6ff] border-t-transparent rounded-full animate-spin mb-4" />
                 <p className="text-[11px] tracking-[1.1px] uppercase text-[#adc6ff] transition-all duration-500">
-                  {LOADING_MESSAGES[loadingMsgIndex]}
+                  {(isUrlModeRef.current ? URL_LOADING_MESSAGES : LOADING_MESSAGES)[loadingMsgIndex]}
                 </p>
               </div>
             )}
@@ -321,7 +366,7 @@ export default function Home() {
 
                 {/* Vulnerability Score */}
                 <VulnerabilityScore
-                  newsText={newsText}
+                  newsText={analysisText}
                   verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
                 />
 

@@ -1,7 +1,9 @@
 const axios = require('axios');
 
 const REGOLO_URL = 'https://api.regolo.ai/v1/chat/completions';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'Llama-3.3-70B-Instruct';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 function formatUserMessage(newsText, searchResults) {
   const sources = searchResults
@@ -11,24 +13,26 @@ function formatUserMessage(newsText, searchResults) {
 }
 
 async function callRegolo(systemPrompt, userMessage) {
-  const response = await axios.post(
-    REGOLO_URL,
-    {
-      model: MODEL,
-      max_tokens: 800,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    },
-    {
-      headers: {
-        Authorization: 'Bearer ' + process.env.REGOLO_API_KEY,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-  return response.data.choices[0].message.content;
+  const body = (model, tokens) => ({
+    model,
+    max_tokens: tokens,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+  });
+  try {
+    const response = await axios.post(REGOLO_URL, body(MODEL, 800), {
+      headers: { Authorization: 'Bearer ' + process.env.REGOLO_API_KEY, 'Content-Type': 'application/json' },
+      timeout: 15000,
+    });
+    return response.data.choices[0].message.content;
+  } catch (_) {
+    const response = await axios.post(GROQ_URL, body(GROQ_MODEL, 800), {
+      headers: { Authorization: 'Bearer ' + process.env.GROQ_API_KEY, 'Content-Type': 'application/json' },
+    });
+    return response.data.choices[0].message.content;
+  }
 }
 
 async function runProsecutor(newsText, searchResults) {
@@ -104,23 +108,18 @@ async function runJudge(newsText, prosecutorArgument, defenderArgument) {
 
   let raw;
   try {
-    const response = await axios.post(
-      REGOLO_URL,
-      {
-        model: MODEL,
-        max_tokens: 700,
-        messages: [
-          { role: 'system', content: JUDGE_SYSTEM_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
-      },
-      {
-        headers: {
-          Authorization: 'Bearer ' + process.env.REGOLO_API_KEY,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    let response;
+    try {
+      response = await axios.post(REGOLO_URL, {
+        model: MODEL, max_tokens: 700,
+        messages: [{ role: 'system', content: JUDGE_SYSTEM_PROMPT }, { role: 'user', content: userMessage }],
+      }, { headers: { Authorization: 'Bearer ' + process.env.REGOLO_API_KEY, 'Content-Type': 'application/json' }, timeout: 15000 });
+    } catch (_) {
+      response = await axios.post(GROQ_URL, {
+        model: GROQ_MODEL, max_tokens: 700,
+        messages: [{ role: 'system', content: JUDGE_SYSTEM_PROMPT }, { role: 'user', content: userMessage }],
+      }, { headers: { Authorization: 'Bearer ' + process.env.GROQ_API_KEY, 'Content-Type': 'application/json' } });
+    }
     raw = response.data.choices[0].message.content;
   } catch (err) {
     console.error('Judge API error:', err.message);

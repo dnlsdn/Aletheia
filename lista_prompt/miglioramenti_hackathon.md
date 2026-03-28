@@ -12,34 +12,6 @@ Run each prompt in its own separate conversation, in this exact order:
 
 ---
 
-## P1 — Fix FALSE vs MISLEADING colors
-
-```
-Working directory: /Users/danielsadun/Library/Developer/Aletheia/frontend
-
-Make exactly two edits, nothing else.
-
-EDIT 1 — file: src/components/VerdictCard.js
-
-Find this exact line (line 10):
-  FALSE:          { pillBg: '#ffb4ab', pillText: '#690005', accentColor: '#ff4444', label: 'False' },
-
-Replace it with:
-  FALSE:          { pillBg: '#ff4444', pillText: '#ffffff', accentColor: '#ff4444', label: 'False' },
-
-EDIT 2 — file: src/components/VoiceVerdict.js
-
-Find this exact line (line 18):
-  FALSE:          { bg: '#ffb4ab', text: '#690005' },
-
-Replace it with:
-  FALSE:          { bg: '#ff4444', text: '#ffffff' },
-
-Do not touch any other lines in either file.
-```
-
----
-
 ## P2 — Sidebar cleanup + dynamic system status
 
 ```

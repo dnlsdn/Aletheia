@@ -15,7 +15,7 @@ const VERDICT_COLORS = {
   PARTIALLY_TRUE: { bg: '#ffd8a8', text: '#5c3800' },
   INCONCLUSIVE:   { bg: '#c2c6d6', text: '#2f3445' },
   MISLEADING:     { bg: '#ffb4ab', text: '#690005' },
-  FALSE:          { bg: '#ffb4ab', text: '#690005' },
+  FALSE:          { bg: '#ff4444', text: '#ffffff' },
 };
 
 function SoundWave({ color }) {

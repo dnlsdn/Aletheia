@@ -7,7 +7,7 @@ const VERDICT_CONFIG = {
   PARTIALLY_TRUE: { pillBg: '#ffd8a8', pillText: '#5c3800', accentColor: '#ba7517', label: 'Partially True' },
   INCONCLUSIVE:   { pillBg: '#c2c6d6', pillText: '#2f3445', accentColor: '#8c909f', label: 'Inconclusive' },
   MISLEADING:     { pillBg: '#ffb4ab', pillText: '#690005', accentColor: '#ffb4ab', label: 'Misleading' },
-  FALSE:          { pillBg: '#ffb4ab', pillText: '#690005', accentColor: '#ff4444', label: 'False' },
+  FALSE:          { pillBg: '#ff4444', pillText: '#ffffff', accentColor: '#ff4444', label: 'False' },
 };
 
 function confidenceBarColor(confidence) {

@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import VerdictCard from '@/components/VerdictCard';
 import VoiceVerdict from '@/components/VoiceVerdict';
-import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
 import ViralityRisk from '@/components/ViralityRisk';
 import MathVerdict from '@/components/MathVerdict';
@@ -391,24 +390,18 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Vulnerability Score */}
-                <VulnerabilityScore
-                  newsText={analysisText}
-                  verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
-                />
+                {/* Virality Risk */}
+                {mutationResult && (
+                  <ViralityRisk
+                    viralityRisk={mutationResult.viralityRisk}
+                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                  />
+                )}
 
                 {/* Mutation Timeline */}
                 {mutationResult && (
                   <MutationTimeline
                     versions={mutationResult.versions}
-                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
-                  />
-                )}
-
-                {/* Virality Risk */}
-                {mutationResult && (
-                  <ViralityRisk
-                    viralityRisk={mutationResult.viralityRisk}
                     verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
                   />
                 )}

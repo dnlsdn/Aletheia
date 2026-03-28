@@ -49,6 +49,8 @@ export default function Home() {
   const [mutationWarning, setMutationWarning] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const resultsRef = useRef(null);
+  const [analysisTime, setAnalysisTime] = useState(null);
+  const analysisStartRef = useRef(null);
   const loadingIntervalRef = useRef(null);
   const [systemStatus, setSystemStatus] = useState({ label: 'CHECKING...', color: '#8c909f' });
   const abortRef = useRef(null);
@@ -109,8 +111,10 @@ export default function Home() {
     }
     setInputError(false);
     setError(null);
+    analysisStartRef.current = Date.now();
     setIsLoading(true);
     setAnalysisResult(null);
+    setAnalysisTime(null);
     setMutationResult(null);
 
     try {
@@ -144,6 +148,7 @@ export default function Home() {
         setMutationWarning(true);
       }
 
+      setAnalysisTime(((Date.now() - analysisStartRef.current) / 1000).toFixed(1));
       setIsLoading(false);
 
       setTimeout(() => {
@@ -275,6 +280,21 @@ export default function Home() {
             {/* Results */}
             {!isLoading && analysisResult && (
               <div ref={resultsRef} className="flex flex-col gap-[24px]">
+                <div className="flex items-center gap-[8px] flex-wrap">
+                  {mutationResult?.versions?.length > 0 && (
+                    <span className="font-mono text-[11px] tracking-[1.1px] uppercase px-[10px] py-[5px] rounded-[4px] bg-[rgba(173,198,255,0.08)] border border-[rgba(173,198,255,0.15)] text-[#adc6ff]">
+                      {mutationResult.versions.length} sources analyzed
+                    </span>
+                  )}
+                  {analysisTime && (
+                    <span className="font-mono text-[11px] tracking-[1.1px] uppercase px-[10px] py-[5px] rounded-[4px] bg-[rgba(173,198,255,0.08)] border border-[rgba(173,198,255,0.15)] text-[#adc6ff]">
+                      completed in {analysisTime}s
+                    </span>
+                  )}
+                  <span className="font-mono text-[11px] tracking-[1.1px] uppercase px-[10px] py-[5px] rounded-[4px] bg-[rgba(104,219,174,0.08)] border border-[rgba(104,219,174,0.15)] text-[#68dbae]">
+                    Regolo.ai · EU hosted
+                  </span>
+                </div>
                 {/* Verdict Card */}
                 <VerdictCard
                   verdict={analysisResult.verdict}

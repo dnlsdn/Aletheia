@@ -7,6 +7,8 @@ import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
 import SourceGraph from '@/components/SourceGraph';
 import ViralityRisk from '@/components/ViralityRisk';
+import MathVerdict from '@/components/MathVerdict';
+import { evaluateMath } from '@/utils/math';
 
 const LOADING_MESSAGES = [
   'Searching for sources...',
@@ -57,6 +59,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [mutationResult, setMutationResult] = useState(null);
+  const [mathResult, setMathResult] = useState(null);
   const [error, setError] = useState(null);
   const [inputError, setInputError] = useState(false);
   const [mutationWarning, setMutationWarning] = useState(false);
@@ -122,12 +125,26 @@ export default function Home() {
 
   const handleAnalyze = async () => {
     const trimmed = newsText.trim();
+
+    // Math shortcut — evaluate deterministically, skip all AI pipeline
+    const math = evaluateMath(trimmed);
+    if (math.isMath) {
+      setInputError(false);
+      setError(null);
+      setAnalysisResult(null);
+      setMutationResult(null);
+      setMathResult({ statement: math.statement, isTrue: math.isTrue });
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      return;
+    }
+
     if (!isUrl(trimmed) && trimmed.length < 20) {
       setInputError(true);
       return;
     }
     setInputError(false);
     setError(null);
+    setMathResult(null);
 
     isUrlModeRef.current = isUrl(trimmed);
     analysisStartRef.current = Date.now();
@@ -319,6 +336,13 @@ export default function Home() {
                 <p className="text-[11px] tracking-[1.1px] uppercase text-[#adc6ff] transition-all duration-500">
                   {(isUrlModeRef.current ? URL_LOADING_MESSAGES : LOADING_MESSAGES)[loadingMsgIndex]}
                 </p>
+              </div>
+            )}
+
+            {/* Math result */}
+            {mathResult && (
+              <div ref={resultsRef}>
+                <MathVerdict statement={mathResult.statement} isTrue={mathResult.isTrue} />
               </div>
             )}
 

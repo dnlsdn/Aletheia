@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Aletheia',
+  title: 'Alethe-ia',
   description: 'Truth Engine: Disinformation analysis system',
 };
 

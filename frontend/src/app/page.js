@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import VerdictCard from '@/components/VerdictCard';
 import VoiceVerdict from '@/components/VoiceVerdict';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
@@ -223,15 +224,18 @@ export default function Home() {
       <aside className="fixed left-0 top-0 bottom-0 w-[256px] bg-[#161b2b] border-r border-[rgba(66,71,84,0.1)] flex flex-col z-20">
         {/* Logo */}
         <div className="px-[32px] pt-[24px] pb-[16px]">
-          <div className="font-mono font-bold text-[16px] text-[#adc6ff] tracking-[-0.8px]">ALETHEIA</div>
+          <div className="font-mono font-bold text-[16px] text-[#adc6ff] tracking-[-0.8px]">ALETHE-IA</div>
           <div className="text-[9.6px] tracking-[1.92px] uppercase text-[#8c909f] opacity-50 mt-[2px]">V.2026.AI</div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 flex flex-col">
-          <a className="flex items-center pl-[32px] pr-[34px] py-[16px] bg-[#1a1f2f] border-r-2 border-[#adc6ff] cursor-pointer">
-            <span className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#adc6ff]">ANALYZE</span>
-          </a>
+          <Link href="/" className="flex items-center pl-[32px] pr-[34px] py-[16px] bg-[#1a1f2f] border-r-2 border-[#adc6ff] cursor-pointer">
+            <span className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#adc6ff]">TEXT ANALYSIS</span>
+          </Link>
+          <Link href="/image-analysis" className="flex items-center pl-[32px] pr-[34px] py-[16px] hover:bg-[#1a1f2f] border-r-2 border-transparent hover:border-[#adc6ff] cursor-pointer transition-colors">
+            <span className="text-[11px] font-bold tracking-[1.1px] uppercase text-[#8c909f] hover:text-[#adc6ff]">IMAGE ANALYSIS</span>
+          </Link>
         </nav>
 
         {/* System Status */}
@@ -252,7 +256,7 @@ export default function Home() {
         {/* Top header */}
         <header className="bg-[#0e1322] px-[32px] py-[16px] flex items-center justify-between border-b border-[rgba(66,71,84,0.1)] sticky top-0 z-10">
           <div>
-            <h1 className="font-bold text-[24px] text-white tracking-[-0.6px] leading-[32px]">Aletheia</h1>
+            <h1 className="font-bold text-[24px] text-white tracking-[-0.6px] leading-[32px]">Alethe-ia</h1>
             <p className="text-[12px] tracking-[1.2px] uppercase text-[#c2c6d6] leading-[16px]">
               Truth Engine: Disinformation analysis system
             </p>

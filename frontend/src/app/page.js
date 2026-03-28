@@ -5,7 +5,6 @@ import VerdictCard from '@/components/VerdictCard';
 import VoiceVerdict from '@/components/VoiceVerdict';
 import VulnerabilityScore from '@/components/VulnerabilityScore';
 import MutationTimeline from '@/components/MutationTimeline';
-import SourceGraph from '@/components/SourceGraph';
 import ViralityRisk from '@/components/ViralityRisk';
 import MathVerdict from '@/components/MathVerdict';
 import { evaluateMath } from '@/utils/math';
@@ -185,7 +184,7 @@ export default function Home() {
         fetch('http://localhost:3002/mutation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: textToAnalyze }),
+          body: JSON.stringify({ text: textToAnalyze, sourceUrl: isUrl(trimmed) ? trimmed : undefined }),
         }),
       ]);
 
@@ -255,7 +254,7 @@ export default function Home() {
           <div>
             <h1 className="font-bold text-[24px] text-white tracking-[-0.6px] leading-[32px]">Aletheia</h1>
             <p className="text-[12px] tracking-[1.2px] uppercase text-[#c2c6d6] leading-[16px]">
-              Truth Engine: Advanced disinformation analysis system
+              Truth Engine: Disinformation analysis system
             </p>
           </div>
           <span className="text-[11px] tracking-[0.55px] uppercase text-[#c2c6d6] hidden sm:block">
@@ -398,14 +397,6 @@ export default function Home() {
                 {mutationResult && (
                   <MutationTimeline
                     versions={mutationResult.versions}
-                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
-                  />
-                )}
-
-                {/* Source Graph */}
-                {mutationResult && (
-                  <SourceGraph
-                    graph={mutationResult.graph}
                     verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
                   />
                 )}

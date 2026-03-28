@@ -9,11 +9,55 @@ const CREDIBILITY_LEVELS = [
 ];
 
 function deriveStats(graph) {
-  if (!graph) return { total: 0, high: 0, low: 0 };
+  if (!graph) return { total: 0, high: 0, medium: 0, low: 0 };
   const total = graph.nodes.length;
   const high = graph.nodes.filter((n) => n.color === '#1D9E75').length;
   const low = graph.nodes.filter((n) => n.color === '#E24B4A').length;
-  return { total, high, low };
+  const medium = total - high - low;
+  return { total, high, medium, low };
+}
+
+function CredibilityVerdict({ stats }) {
+  const { total, high, low, medium } = stats;
+  if (total === 0) return null;
+
+  const highPct = Math.round((high / total) * 100);
+  const lowPct = Math.round((low / total) * 100);
+
+  let color, icon, headline, body;
+
+  if (lowPct >= 50) {
+    color = '#E24B4A';
+    icon = '⚠';
+    headline = 'Dominated by low-credibility outlets';
+    body = `${lowPct}% of the sources spreading this story come from outlets with a low credibility score. Stories that circulate primarily through unreliable channels are at significantly higher risk of distortion and misinformation.`;
+  } else if (highPct >= 50) {
+    color = '#1D9E75';
+    icon = '✓';
+    headline = 'Mostly picked up by credible outlets';
+    body = `${highPct}% of sources are high-credibility outlets. While this does not guarantee accuracy, broad coverage by established media is a positive signal for the reliability of this story.`;
+  } else {
+    color = '#BA7517';
+    icon = '~';
+    headline = 'Mixed credibility landscape';
+    body = `This story has spread across a mix of credible and less reliable outlets (${high} high, ${medium} medium, ${low} low). Cross-check the claim against primary sources before sharing.`;
+  }
+
+  return (
+    <div style={{ borderTop: '1px solid rgba(66,71,84,0.3)', padding: '16px 24px 4px' }}>
+      <p style={{ fontSize: 11, color: '#adc6ff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>
+        Credibility Assessment
+      </p>
+      <div style={{ background: '#1a2035', borderRadius: 8, padding: '12px 14px', borderLeft: `3px solid ${color}` }}>
+        <p style={{ fontSize: 13, color, fontWeight: 700, marginBottom: 4 }}>
+          {icon}&nbsp; {headline}
+        </p>
+        <p style={{ fontSize: 12, color: '#8c909f', lineHeight: 1.6, margin: 0 }}>
+          {body}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function SourceGraph({ graph, verdictColor }) {
@@ -36,7 +80,6 @@ export default function SourceGraph({ graph, verdictColor }) {
       networkRef.current = null;
     }
 
-    // Enrich nodes with better font/border styling
     const enrichedNodes = graph.nodes.map((n) => ({
       ...n,
       font: {
@@ -145,6 +188,21 @@ export default function SourceGraph({ graph, verdictColor }) {
             </div>
           )}
         </div>
+
+        {/* Plain-language explanation */}
+        <div style={{ background: '#1a2035', borderRadius: 8, padding: '12px 14px', marginTop: 16, borderLeft: '3px solid rgba(173,198,255,0.2)' }}>
+          <p style={{ fontSize: 11, color: '#adc6ff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 6 }}>
+            How to read this graph
+          </p>
+          <p style={{ fontSize: 12, color: '#8c909f', lineHeight: 1.6, margin: 0 }}>
+            Each <span style={{ color: '#fff' }}>dot is a website</span> that published or shared this story.{' '}
+            <span style={{ color: '#fff' }}>Bigger dot = more credible source.</span>{' '}
+            Arrows show how information flowed — follow them top to bottom to trace where the story came from and how it spread.{' '}
+            <span style={{ color: '#1D9E75' }}>Green</span> nodes are trusted outlets,{' '}
+            <span style={{ color: '#BA7517' }}>orange</span> are uncertain,{' '}
+            <span style={{ color: '#E24B4A' }}>red</span> are low-credibility sources.
+          </p>
+        </div>
       </div>
 
       {/* Graph area */}
@@ -184,7 +242,7 @@ export default function SourceGraph({ graph, verdictColor }) {
       </div>
 
       {/* Legend */}
-      <div className="px-[24px] pb-[20px] pt-[4px]">
+      <div className="px-[24px] pb-[16px] pt-[4px]">
         <div className="flex items-center gap-[6px] flex-wrap">
           {CREDIBILITY_LEVELS.map(({ color, label, bg, border }) => (
             <span
@@ -199,8 +257,17 @@ export default function SourceGraph({ graph, verdictColor }) {
               {label}
             </span>
           ))}
+          <span className="text-[10px] text-[#8c909f] tracking-[0.4px] ml-[4px]">
+            · Dot size proportional to credibility score
+          </span>
         </div>
       </div>
+
+      {/* Credibility verdict */}
+      {!isEmpty && <CredibilityVerdict stats={stats} />}
+
+      {/* Bottom padding */}
+      <div style={{ height: 20 }} />
     </div>
   );
 }

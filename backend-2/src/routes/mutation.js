@@ -32,7 +32,7 @@ function formatTime(date) {
 }
 
 router.post('/mutation', async (req, res) => {
-  const { text } = req.body;
+  const { text, sourceUrl } = req.body;
 
   if (!text || text.length < 20) {
     return res.status(400).json({
@@ -57,7 +57,7 @@ router.post('/mutation', async (req, res) => {
     const versions = await fetchVersions(cleanedText);
 
     // 2. Compute mutation scores (similarity, mutationScore, isSource)
-    const versionsWithMutation = await computeMutationScores(cleanedText, versions);
+    const versionsWithMutation = await computeMutationScores(cleanedText, versions, sourceUrl);
 
     // 3. Assess credibility for each version
     const versionsWithCredibility = versionsWithMutation.map((v) => ({

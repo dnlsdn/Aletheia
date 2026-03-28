@@ -2,7 +2,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'Aletheia',
-  description: 'Truth Engine: Advanced disinformation analysis system',
+  description: 'Truth Engine: Disinformation analysis system',
 };
 
 export default function RootLayout({ children }) {

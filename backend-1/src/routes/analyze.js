@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { webSearch } = require('../utils/search');
-const { runProsecutor, runDefender, runJudge } = require('../agents/debate');
+const { runProsecutor, runDefender, runJudge, generateConfidenceTimeline } = require('../agents/debate');
 
 // ── CORS: allow any localhost port (Dev 3 Next.js may run on 3000 or any port) ──
 router.use((req, res, next) => {
@@ -82,13 +82,18 @@ router.post('/analyze', async (req, res) => {
     // Step 6 — Judge (sequential)
     const judgeResult = await runJudge(cleanedText, prosecutorArg, defenderArg);
 
-    return { prosecutionResults, defenseResults, prosecutorArg, defenderArg, judgeResult };
+    // Step 7 — Confidence timeline (post-hoc reconstruction, does not affect verdict)
+    const confidenceTimeline = await generateConfidenceTimeline(
+      prosecutionResults, defenseResults, judgeResult.verdict, judgeResult.confidence
+    );
+
+    return { prosecutionResults, defenseResults, prosecutorArg, defenderArg, judgeResult, confidenceTimeline };
   };
 
   try {
     const result = await Promise.race([pipeline(), timeoutPromise(60_000)]);
 
-    const { prosecutionResults, defenseResults, prosecutorArg, defenderArg, judgeResult } = result;
+    const { prosecutionResults, defenseResults, prosecutorArg, defenderArg, judgeResult, confidenceTimeline } = result;
     const duration = Date.now() - start;
     const preview = cleanedText.slice(0, 60).replace(/\n/g, ' ');
 
@@ -106,6 +111,7 @@ router.post('/analyze', async (req, res) => {
       defender_sources: defenseResults,
       prosecutor_points: judgeResult.prosecutor_points,
       defender_points: judgeResult.defender_points,
+      confidence_timeline: confidenceTimeline,
     });
   } catch (error) {
     const duration = Date.now() - start;

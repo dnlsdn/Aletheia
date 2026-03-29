@@ -35,7 +35,7 @@ async function fetchVersions(newsText) {
     } catch {
       domain = item.url;
     }
-    return { title: item.title, url: item.url, snippet: item.snippet, domain };
+    return { title: item.title, url: item.url, snippet: item.snippet, date: item.date || "", domain };
   });
 }
 

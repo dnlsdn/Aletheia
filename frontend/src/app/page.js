@@ -7,6 +7,7 @@ import VoiceVerdict from '@/components/VoiceVerdict';
 import MutationTimeline from '@/components/MutationTimeline';
 import ViralityRisk from '@/components/ViralityRisk';
 import MathVerdict from '@/components/MathVerdict';
+import JudgeTimeline from '@/components/JudgeTimeline';
 import { evaluateMath } from '@/utils/math';
 
 const LOADING_MESSAGES = [
@@ -383,6 +384,15 @@ export default function Home() {
                   summary={analysisResult.summary}
                   confidence={analysisResult.confidence}
                 />
+
+                {/* Judge's Deliberation Timeline */}
+                {analysisResult.confidence_timeline && (
+                  <JudgeTimeline
+                    confidenceTimeline={analysisResult.confidence_timeline}
+                    verdict={analysisResult.verdict}
+                    verdictColor={VERDICT_COLORS[analysisResult.verdict] ?? VERDICT_COLORS.INCONCLUSIVE}
+                  />
+                )}
 
                 {mutationWarning && (
                   <div className="bg-[rgba(186,117,23,0.1)] border border-[rgba(186,117,23,0.3)] rounded-[6px] px-[14px] py-[10px] text-[13px] text-[#ba7517]">

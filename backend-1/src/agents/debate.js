@@ -140,4 +140,125 @@ async function runJudge(newsText, prosecutorArgument, defenderArgument) {
   }
 }
 
-module.exports = { runProsecutor, runDefender, runJudge };
+function extractDomain(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+// Maps verdict + confidence to a signed position on the -100…+100 scale.
+// Positive = leaning TRUE/VERIFIED, negative = leaning FALSE.
+const VERDICT_DIRECTION = { VERIFIED: 1, PARTIALLY_TRUE: 0.5, INCONCLUSIVE: 0, MISLEADING: -0.5, FALSE: -1 };
+function verdictFinalPosition(verdict, confidence) {
+  const dir = VERDICT_DIRECTION[verdict] ?? 0;
+  return Math.round(dir * confidence);
+}
+
+function generateFallbackTimeline(interleaved, finalPosition) {
+  const points = [{ step: 0, agent: 'start', source: 'Analysis begins', domain: '', confidence: 0 }];
+  const n = interleaved.length;
+  for (let i = 0; i < n; i++) {
+    const s = interleaved[i];
+    const progress = (i + 1) / n;
+    const trend = finalPosition * progress;           // 0 → finalPosition
+    const swing = s.agent === 'prosecutor' ? -9 : 9; // prosecutor pulls negative, defender positive
+    const dampen = 1 - progress * 0.5;
+    const confidence = Math.round(Math.max(-95, Math.min(95, trend + swing * dampen)));
+    points.push({ step: i + 1, agent: s.agent, source: s.title || '', domain: extractDomain(s.url || ''), confidence });
+  }
+  points[points.length - 1].confidence = finalPosition;
+  return points;
+}
+
+// Guarantees: defender points always rise, prosecutor points always fall.
+// Then linearly rescales intermediates so the last value lands exactly on finalPosition.
+function enforceOscillation(points, finalPosition) {
+  if (points.length < 2) return points;
+
+  // Pass 1: fix direction violations (min delta = 1 in the correct direction)
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1].confidence;
+    if (points[i].agent === 'defender' && points[i].confidence <= prev) {
+      points[i].confidence = Math.min(95, prev + 1);
+    } else if (points[i].agent === 'prosecutor' && points[i].confidence >= prev) {
+      points[i].confidence = Math.max(-95, prev - 1);
+    }
+  }
+
+  // Pass 2: rescale intermediate values so the sequence ends at finalPosition
+  const s = points[0].confidence; // 0
+  const e = points[points.length - 1].confidence;
+  if (Math.abs(e - s) > 1) {
+    const scale = (finalPosition - s) / (e - s);
+    for (let i = 1; i < points.length - 1; i++) {
+      points[i].confidence = Math.round(s + (points[i].confidence - s) * scale);
+      points[i].confidence = Math.max(-95, Math.min(95, points[i].confidence));
+    }
+  }
+  points[points.length - 1].confidence = finalPosition;
+
+  // Pass 3: fix any direction violations introduced by rescaling
+  for (let i = 1; i < points.length - 1; i++) {
+    const prev = points[i - 1].confidence;
+    if (points[i].agent === 'defender' && points[i].confidence <= prev) {
+      points[i].confidence = Math.min(95, prev + 1);
+    } else if (points[i].agent === 'prosecutor' && points[i].confidence >= prev) {
+      points[i].confidence = Math.max(-95, prev - 1);
+    }
+  }
+  points[points.length - 1].confidence = finalPosition;
+
+  return points;
+}
+
+async function generateConfidenceTimeline(prosecutionResults, defenseResults, verdict, finalConfidence) {
+  const finalPosition = verdictFinalPosition(verdict, finalConfidence);
+
+  // Interleave sources: P0, D0, P1, D1, ...
+  const maxLen = Math.max(prosecutionResults.length, defenseResults.length);
+  const interleaved = [];
+  for (let i = 0; i < maxLen; i++) {
+    if (i < prosecutionResults.length) interleaved.push({ agent: 'prosecutor', ...prosecutionResults[i] });
+    if (i < defenseResults.length)    interleaved.push({ agent: 'defender',   ...defenseResults[i] });
+  }
+
+  const sourceList = interleaved
+    .map((s, i) => `${i + 1}. [${s.agent.toUpperCase()}] ${(s.title || '').slice(0, 80)} (${extractDomain(s.url || '')})`)
+    .join('\n');
+
+  const systemPrompt =
+    'You are reconstructing a fact-checking judge\'s deliberation during a debate.\n' +
+    `Final verdict: ${verdict}. Final position: ${finalPosition} on a scale from -100 (FALSE) to +100 (VERIFIED/TRUE).\n\n` +
+    'Given sources reviewed in alternating order, return the judge\'s signed position after each source. Rules:\n' +
+    '- Start at 0 (neutral)\n' +
+    '- PROSECUTION sources push toward FALSE — the value must decrease compared to the previous step\n' +
+    '- DEFENSE sources push toward TRUE — the value must increase compared to the previous step\n' +
+    '- The last step MUST end at exactly ' + finalPosition + '\n' +
+    '- Show realistic oscillation between positive and negative territory\n\n' +
+    'Return ONLY a valid JSON array, no text before or after:\n' +
+    '[{"step":1,"agent":"prosecutor","source":"title","domain":"domain.com","confidence":-28}, ...]';
+
+  try {
+    const raw = await callRegolo(systemPrompt, `Sources in order:\n${sourceList}`);
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      const match = raw.match(/\[[\s\S]*\]/);
+      parsed = match ? JSON.parse(match[0]) : null;
+    }
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const normalized = parsed.map((p, i) => ({
+        ...p,
+        agent: i < interleaved.length ? interleaved[i].agent : p.agent,
+        domain: i < interleaved.length ? extractDomain(interleaved[i].url || '') : p.domain,
+        source: i < interleaved.length ? (interleaved[i].title || '') : p.source,
+      }));
+      const full = [{ step: 0, agent: 'start', source: 'Analysis begins', domain: '', confidence: 0 }, ...normalized];
+      return enforceOscillation(full, finalPosition);
+    }
+  } catch (err) {
+    console.error('generateConfidenceTimeline error:', err.message);
+  }
+  return generateFallbackTimeline(interleaved, finalPosition);
+}
+
+module.exports = { runProsecutor, runDefender, runJudge, generateConfidenceTimeline };

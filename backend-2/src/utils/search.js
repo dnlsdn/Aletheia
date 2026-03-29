@@ -18,6 +18,7 @@ async function webSearch(query, numResults = 5) {
       title: item.title || "",
       url: item.link || "",
       snippet: item.snippet || "",
+      date: item.date || "",
     }));
   } catch (err) {
     console.error("[webSearch] error:", err.message);

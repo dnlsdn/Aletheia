@@ -1,127 +1,289 @@
 'use client';
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-  ResponsiveContainer,
-} from 'recharts';
+import { useState, useEffect } from 'react';
 
 function truncate(str, max) {
   return str.length > max ? str.slice(0, max) + '\u2026' : str;
 }
 
-function CustomDot({ cx, cy, payload }) {
-  if (cx == null || cy == null) return null;
-  const { isSource, similarity } = payload;
-  let fill, r;
-  if (isSource) {
-    fill = '#1D9E75';
-    r = 8;
-  } else if (similarity >= 0.7) {
-    fill = '#BA7517';
-    r = 6;
-  } else {
-    fill = '#E24B4A';
-    r = 6;
-  }
-  return <circle cx={cx} cy={cy} r={r} fill={fill} stroke="none" />;
+function barColor(v) {
+  if (v.isSource) return '#1D9E75';
+  if (v.similarity >= 0.7) return '#BA7517';
+  return '#E24B4A';
 }
 
-function CustomTooltip({ active, payload }) {
-  if (!active || !payload || !payload.length) return null;
-  const d = payload[0].payload;
-  const pct = Math.round(d.similarity * 100);
-  const distortion = 100 - pct;
+function StatPill({ label, value, color, animate }) {
+  // value may be a number or a string like "45%"
+  const isPercent = typeof value === 'string' && value.endsWith('%');
+  const numericTarget = isPercent
+    ? parseInt(value, 10)
+    : typeof value === 'number'
+    ? value
+    : null;
 
-  let statusColor, statusLabel, statusNote;
-  if (d.isSource) {
-    statusColor = '#1D9E75';
-    statusLabel = 'Primary source';
-    statusNote = 'This is the original version of the story.';
-  } else if (d.similarity >= 0.7) {
-    statusColor = '#BA7517';
-    statusLabel = 'Minor drift';
-    statusNote = `Content changed ${distortion}% from the original — small but detectable alterations.`;
-  } else {
-    statusColor = '#E24B4A';
-    statusLabel = 'Significant distortion';
-    statusNote = `Content changed ${distortion}% from the original — the meaning may have shifted substantially.`;
-  }
+  const [displayed, setDisplayed] = useState(0);
 
-  return (
-    <div
-      style={{
-        backgroundColor: '#161b2b',
-        border: `1px solid ${statusColor}55`,
-        borderRadius: 8,
-        padding: '12px 14px',
-        maxWidth: 220,
-      }}
-    >
-      <p style={{ fontFamily: 'monospace', fontSize: 11, color: '#adc6ff', marginBottom: 6, fontWeight: 700 }}>
-        {d.domain}
-      </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
-        <span style={{ fontSize: 11, color: statusColor, fontWeight: 700 }}>{statusLabel}</span>
-      </div>
-      <p style={{ fontSize: 11, color: '#c2c6d6', margin: '3px 0' }}>
-        Faithfulness to original:{' '}
-        <span style={{ fontWeight: 700, color: '#fff' }}>{pct}%</span>
-      </p>
-      <p style={{ fontSize: 11, color: '#c2c6d6', margin: '3px 0' }}>
-        Content changed:{' '}
-        <span style={{ fontWeight: 700, color: distortion > 30 ? '#E24B4A' : '#BA7517' }}>{distortion}%</span>
-      </p>
-      <p style={{ fontSize: 10, color: '#8c909f', marginTop: 8, lineHeight: 1.4 }}>
-        {statusNote}
-      </p>
-    </div>
-  );
-}
+  useEffect(() => {
+    if (!animate || numericTarget == null) return;
+    const duration = 800;
+    const start = performance.now();
+    function step(now) {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      setDisplayed(Math.round(eased * numericTarget));
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, [animate, numericTarget]);
 
-function StatPill({ label, value, color }) {
+  const displayValue =
+    numericTarget != null
+      ? isPercent
+        ? `${displayed}%`
+        : displayed
+      : value;
+
   return (
     <div style={{ background: '#1a2035', borderRadius: 8, padding: '10px 16px', minWidth: 90, textAlign: 'center' }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: color || '#fff', letterSpacing: '-0.5px' }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: color || '#fff', letterSpacing: '-0.5px' }}>{displayValue}</div>
       <div style={{ fontSize: 10, color: '#8c909f', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: 2 }}>{label}</div>
     </div>
   );
 }
 
-function PlainSummary({ versions }) {
-  const total = versions.length;
-  const distorted = versions.filter((v) => !v.isSource && v.similarity < 0.7).length;
-  const minSim = Math.min(...versions.map((v) => v.similarity));
-  const maxDrift = Math.round((1 - minSim) * 100);
+function PlainSummary({ others, distortedCount, maxDrift }) {
+  const total = others.length;
 
-  if (distorted === 0) {
+  if (distortedCount === 0) {
     return (
       <p style={{ fontSize: 13, color: '#8c909f', lineHeight: 1.6, margin: 0 }}>
-        <span style={{ color: '#1D9E75', fontWeight: 700 }}>No significant distortion detected.</span>{' '}
-        All {total} sources tracked stayed faithful to the original story (above 70% similarity). The information appears to have spread without major alterations.
+        <span style={{ color: '#1D9E75', fontWeight: 700 }}>Nessuna distorsione significativa rilevata.</span>{' '}
+        Tutte le {total} fonti secondarie tracciate sono rimaste fedeli alla notizia originale (oltre 70% di similarità).
+        Le informazioni sembrano essersi diffuse senza alterazioni rilevanti.
       </p>
     );
   }
 
   return (
     <p style={{ fontSize: 13, color: '#8c909f', lineHeight: 1.6, margin: 0 }}>
-      Out of <span style={{ color: '#fff', fontWeight: 600 }}>{total} sources</span> tracked,{' '}
-      <span style={{ color: '#E24B4A', fontWeight: 700 }}>{distorted} significantly distorted</span> the original content — altering up to{' '}
-      <span style={{ color: '#E24B4A', fontWeight: 700 }}>{maxDrift}%</span> of the meaning.{' '}
-      {distorted >= total / 2
-        ? 'The majority of the sources carry a mutated version of the story. Treat secondary reports with caution.'
-        : 'Most sources remain close to the original, but distorted versions are in circulation and may spread further.'}
+      Su <span style={{ color: '#fff', fontWeight: 600 }}>{total} fonti secondarie</span> tracciate,{' '}
+      <span style={{ color: '#E24B4A', fontWeight: 700 }}>{distortedCount} hanno distorto significativamente</span> il contenuto originale — con una deriva massima del{' '}
+      <span style={{ color: '#E24B4A', fontWeight: 700 }}>{maxDrift}%</span>.{' '}
+      {distortedCount >= total / 2
+        ? 'La maggioranza delle fonti veicola una versione mutata della notizia. Trattare i report secondari con cautela.'
+        : "La maggior parte delle fonti rimane vicina all'originale, ma versioni distorte sono in circolazione e potrebbero diffondersi ulteriormente."}
     </p>
   );
 }
 
+function mutationScoreColor(score) {
+  if (score <= 3) return '#1D9E75';
+  if (score <= 6) return '#BA7517';
+  return '#E24B4A';
+}
+
+function SimilarityBar({ v, expanded, onToggle, mounted, rowIndex }) {
+  const pct = Math.round(v.similarity * 100);
+  const color = barColor(v);
+  const isSource = v.isSource;
+  const scoreColor = mutationScoreColor(v.mutationScore ?? 0);
+
+  return (
+    <div style={{ borderRadius: 6, overflow: 'hidden' }}>
+      {/* Row */}
+      <div
+        onClick={isSource ? (v.url ? () => window.open(v.url, '_blank', 'noopener,noreferrer') : undefined) : onToggle}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '7px 10px',
+          borderLeft: isSource ? `3px solid #1D9E75` : '3px solid transparent',
+          background: isSource
+            ? 'rgba(29,158,117,0.06)'
+            : expanded
+            ? 'rgba(173,198,255,0.06)'
+            : 'transparent',
+          cursor: isSource ? (v.url ? 'pointer' : 'default') : 'pointer',
+          userSelect: 'none',
+          transition: 'background 0.15s ease',
+        }}
+      >
+        {/* Domain label */}
+        <div style={{ width: 140, flexShrink: 0 }}>
+          <span
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 11,
+              color: isSource ? '#1D9E75' : '#adc6ff',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            {truncate(v.domain, 20)}
+            {isSource && (
+              <span
+                style={{
+                  fontSize: 9,
+                  fontFamily: 'sans-serif',
+                  fontWeight: 700,
+                  background: '#1D9E75',
+                  color: '#fff',
+                  borderRadius: 3,
+                  padding: '1px 5px',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                ORIGINAL
+              </span>
+            )}
+          </span>
+        </div>
+
+        {/* Bar track */}
+        <div style={{ flex: 1, position: 'relative', height: 18 }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: 2,
+              left: 0,
+              height: 14,
+              width: mounted ? `${pct}%` : '0%',
+              background: color,
+              borderRadius: 3,
+              opacity: 0.85,
+              transition: `width 600ms ease ${rowIndex * 60}ms`,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: '70%',
+              width: 1,
+              height: '100%',
+              borderLeft: '1.5px dashed #BA7517',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+
+        {/* Percentage value */}
+        <div style={{ width: 36, textAlign: 'right', flexShrink: 0 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: color, fontFamily: 'monospace' }}>
+            {pct}%
+          </span>
+        </div>
+
+        {/* Credibility badge (not shown for the source row) */}
+        {!isSource && v.credibility && (
+          <div
+            title="Source credibility score — measures the historical reliability of this outlet (0–100)."
+            style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, cursor: 'pointer' }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: v.credibility.color,
+                flexShrink: 0,
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontSize: 11, fontWeight: 700, color: v.credibility.color, fontFamily: 'monospace' }}>
+              {v.credibility.score}
+            </span>
+          </div>
+        )}
+
+        {/* Chevron */}
+        {!isSource && (
+          <div style={{ width: 16, flexShrink: 0, textAlign: 'right', fontSize: 11, color: '#8c909f' }}>
+            {expanded ? '▾' : '▸'}
+          </div>
+        )}
+      </div>
+
+      {/* Detail panel */}
+      {!isSource && expanded && (
+        <div
+          style={{
+            background: 'rgba(173,198,255,0.04)',
+            borderLeft: '3px solid rgba(173,198,255,0.2)',
+            padding: '12px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
+          {/* Title */}
+          {v.title && (
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
+              {v.title}
+            </p>
+          )}
+
+          {/* Snippet */}
+          {v.snippet && (
+            <p style={{ margin: 0, fontSize: 12, color: '#8c909f', lineHeight: 1.6 }}>
+              {v.snippet}
+            </p>
+          )}
+
+          {/* Mutation score */}
+          {v.mutationScore != null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: '#8c909f', flexShrink: 0 }}>
+                Mutation intensity:
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor, fontFamily: 'monospace', flexShrink: 0 }}>
+                {v.mutationScore}/10
+              </span>
+              <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${(v.mutationScore / 10) * 100}%`,
+                    background: scoreColor,
+                    borderRadius: 2,
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Link */}
+          {v.url && (
+            <a
+              href={v.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 12, color: '#adc6ff', textDecoration: 'none', alignSelf: 'flex-start' }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Open source →
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MutationTimeline({ versions, verdictColor }) {
+  const [expandedUrl, setExpandedUrl] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!versions || versions.length < 2) {
     return (
       <div
@@ -129,24 +291,30 @@ export default function MutationTimeline({ versions, verdictColor }) {
         style={{ borderLeft: verdictColor ? `4px solid ${verdictColor}` : undefined }}
       >
         <p className="text-[#8c909f] text-[15px]">
-          Not enough source versions found to build a timeline.
+          Non sono state trovate abbastanza versioni per costruire una timeline.
         </p>
       </div>
     );
   }
 
-  const sorted = [...versions].sort((a, b) => b.similarity - a.similarity);
-  const data = sorted.map((v, i) => ({ ...v, index: i + 1 }));
+  // Normalize: the original source is always 100% faithful to itself
+  const normalized = versions.map((v) =>
+    v.isSource ? { ...v, similarity: 1.0 } : v
+  );
 
-  const totalSources = versions.length;
-  const distortedCount = versions.filter((v) => !v.isSource && v.similarity < 0.7).length;
-  const faithfulCount = totalSources - distortedCount;
-  const minSim = Math.min(...versions.map((v) => v.similarity));
+  // Original source first, then others sorted by similarity descending
+  const source = normalized.find((v) => v.isSource);
+  const others = normalized
+    .filter((v) => !v.isSource)
+    .sort((a, b) => b.similarity - a.similarity);
 
-  const xTickFormatter = (value) => {
-    const item = data.find((d) => d.index === value);
-    return item ? truncate(item.domain, 18) : String(value);
-  };
+  const ordered = source ? [source, ...others] : others;
+
+  // Stats exclude the original source
+  const distortedCount = others.filter((v) => v.similarity < 0.7).length;
+  const faithfulCount = others.filter((v) => v.similarity >= 0.7).length;
+  const minSim = others.length > 0 ? Math.min(...others.map((v) => v.similarity)) : 1;
+  const maxDrift = Math.round((1 - minSim) * 100);
 
   return (
     <div
@@ -156,104 +324,191 @@ export default function MutationTimeline({ versions, verdictColor }) {
       {/* Header */}
       <div>
         <h2 className="font-bold text-[20px] text-white tracking-[-0.5px] leading-[28px]">
-          Mutation Timeline
+          Source Drift Analysis
         </h2>
         <p className="text-[12px] tracking-[1.2px] uppercase text-[#8c909f] leading-[16px] mt-[2px]">
-          How the article changed across sources
+          Come la notizia si è trasformata nelle diverse fonti
         </p>
       </div>
 
       {/* Plain-language explanation */}
       <div style={{ background: '#1a2035', borderRadius: 8, padding: '14px 16px', borderLeft: '3px solid #adc6ff33' }}>
         <p style={{ fontSize: 12, color: '#adc6ff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 6 }}>
-          What is this?
+          Come leggere questo grafico
         </p>
         <p style={{ fontSize: 13, color: '#8c909f', lineHeight: 1.6, margin: 0 }}>
-          When a news story spreads online, each outlet may change its wording, emphasis, or even meaning.
-          This chart tracks how <span style={{ color: '#fff' }}>faithful each source is to the original article</span>.
-          A score of <span style={{ color: '#1D9E75', fontWeight: 600 }}>100%</span> means identical content;
-          below <span style={{ color: '#E24B4A', fontWeight: 600 }}>70%</span> means the story has been substantially altered — potentially creating misinformation.
+          Il grafico parte dalla <span style={{ color: '#1D9E75', fontWeight: 600 }}>fonte originale</span> (100% fedeltà)
+          e mostra come ciascuna fonte secondaria si discosta da essa.
+          Sotto il <span style={{ color: '#E24B4A', fontWeight: 600 }}>70% di fedeltà</span> il contenuto è considerato
+          significativamente distorto — potenzialmente fonte di disinformazione.
         </p>
       </div>
 
       {/* Stat pills */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <StatPill label="Sources tracked" value={totalSources} color="#adc6ff" />
-        <StatPill label="Faithful" value={faithfulCount} color="#1D9E75" />
-        <StatPill label="Distorted" value={distortedCount} color={distortedCount > 0 ? '#E24B4A' : '#8c909f'} />
-        <StatPill label="Max drift" value={`${Math.round((1 - minSim) * 100)}%`} color={minSim < 0.7 ? '#E24B4A' : '#BA7517'} />
+        <StatPill label="Fonti secondarie" value={others.length} color="#adc6ff" animate={mounted} />
+        <StatPill label="Fedeli" value={faithfulCount} color="#1D9E75" animate={mounted} />
+        <StatPill label="Distorte" value={distortedCount} color={distortedCount > 0 ? '#E24B4A' : '#8c909f'} animate={mounted} />
+        <StatPill label="Deriva max" value={`${maxDrift}%`} color={minSim < 0.7 ? '#E24B4A' : '#BA7517'} animate={mounted} />
       </div>
 
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={data} margin={{ top: 8, right: 24, left: 8, bottom: 28 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(66,71,84,0.2)" />
-          <XAxis
-            dataKey="index"
-            tickFormatter={xTickFormatter}
-            tick={{ fill: '#8c909f', fontSize: 11 }}
-            angle={-18}
-            textAnchor="end"
-            interval={0}
-          />
-          <YAxis
-            domain={[0, 1]}
-            tickFormatter={(v) => `${Math.round(v * 100)}%`}
-            tick={{ fill: '#8c909f', fontSize: 11 }}
-            label={{
-              value: 'Faithfulness to original',
-              angle: -90,
-              position: 'insideLeft',
-              fill: '#8c909f',
-              fontSize: 11,
-              dx: -4,
-            }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine
-            y={0.7}
-            stroke="#BA7517"
-            strokeDasharray="5 3"
-            label={{
-              value: 'Distortion threshold (70%)',
-              position: 'insideTopRight',
-              fill: '#BA7517',
-              fontSize: 10,
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="similarity"
-            stroke="#adc6ff"
-            strokeWidth={2}
-            dot={<CustomDot />}
-            activeDot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      {/* Bar chart */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {/* Column headers */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 10px', marginBottom: 4 }}>
+          <div style={{ width: 140, flexShrink: 0 }}>
+            <span style={{ fontSize: 10, color: '#8c909f', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Fonte</span>
+          </div>
+          <div style={{ flex: 1, position: 'relative', height: 16 }}>
+            {/* Threshold label above the 70% mark */}
+            <span
+              style={{
+                position: 'absolute',
+                left: '70%',
+                transform: 'translateX(-50%)',
+                fontSize: 9,
+                color: '#BA7517',
+                fontWeight: 700,
+                letterSpacing: '0.4px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Distortion threshold
+            </span>
+          </div>
+          <div style={{ width: 36, flexShrink: 0 }} />
+          {/* Credibility badge column header */}
+          <div style={{ width: 44, flexShrink: 0 }} />
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <div
+            style={
+              others.length > 8
+                ? { maxHeight: 360, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }
+                : { display: 'flex', flexDirection: 'column', gap: 2 }
+            }
+          >
+            {ordered.map((v, i) => {
+              const key = v.url || v.domain + i;
+              return (
+                <SimilarityBar
+                  key={key}
+                  v={v}
+                  expanded={expandedUrl === key}
+                  onToggle={() => setExpandedUrl(expandedUrl === key ? null : key)}
+                  mounted={mounted}
+                  rowIndex={i}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Legend */}
       <div className="flex items-center gap-[24px] flex-wrap">
         <div className="flex items-center gap-[8px]">
           <span className="w-[10px] h-[10px] rounded-full flex-shrink-0 bg-[#1D9E75]" />
-          <span className="text-[11px] text-[#8c909f]">Original source</span>
+          <span className="text-[11px] text-[#8c909f]">Fonte originale (100%)</span>
         </div>
         <div className="flex items-center gap-[8px]">
           <span className="w-[8px] h-[8px] rounded-full flex-shrink-0 bg-[#BA7517]" />
-          <span className="text-[11px] text-[#8c909f]">Minor drift — story mostly intact (&gt;70% faithful)</span>
+          <span className="text-[11px] text-[#8c909f]">Deriva minore — notizia sostanzialmente intatta (&gt;70%)</span>
         </div>
         <div className="flex items-center gap-[8px]">
           <span className="w-[8px] h-[8px] rounded-full flex-shrink-0 bg-[#E24B4A]" />
-          <span className="text-[11px] text-[#8c909f]">Significant distortion — meaning may have changed (&lt;70% faithful)</span>
+          <span className="text-[11px] text-[#8c909f]">Distorsione significativa — significato alterato (&lt;70%)</span>
         </div>
       </div>
+
+      {/* Top Distortions */}
+      {(() => {
+        const topDistorted = others
+          .filter((v) => v.similarity < 0.7)
+          .sort((a, b) => a.similarity - b.similarity)
+          .slice(0, 3);
+        if (topDistorted.length === 0) return null;
+        return (
+          <div style={{ borderTop: '1px solid rgba(66,71,84,0.3)', paddingTop: 16 }}>
+            <p style={{ fontSize: 11, color: '#adc6ff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 10 }}>
+              Top Distortions
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {topDistorted.map((v, i) => {
+                const drift = Math.round((1 - v.similarity) * 100);
+                return (
+                  <div
+                    key={v.url || v.domain + i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      background: '#1a2035',
+                      borderRadius: 6,
+                      padding: '8px 12px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: '#E24B4A',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 800,
+                        borderRadius: 4,
+                        padding: '2px 6px',
+                        flexShrink: 0,
+                        letterSpacing: '0.4px',
+                      }}
+                    >
+                      #{i + 1}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: '#adc6ff',
+                        flexShrink: 0,
+                        minWidth: 100,
+                      }}
+                    >
+                      {truncate(v.domain, 20)}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#E24B4A',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {drift}% drift
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: '#8c909f',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {truncate(v.title || '', 60)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Plain-language summary */}
       <div style={{ borderTop: '1px solid rgba(66,71,84,0.3)', paddingTop: 16 }}>
         <p style={{ fontSize: 11, color: '#adc6ff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>
-          Analysis
+          Analisi
         </p>
-        <PlainSummary versions={versions} />
+        <PlainSummary others={others} distortedCount={distortedCount} maxDrift={maxDrift} />
       </div>
     </div>
   );

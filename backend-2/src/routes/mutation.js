@@ -68,8 +68,8 @@ router.post('/mutation', async (req, res) => {
     // 4. Build source graph
     const graph = buildSourceGraph(versionsWithCredibility);
 
-    // 5. Compute virality risk
-    const viralityRisk = computeViralityRisk(cleanedText, versionsWithCredibility);
+    // 5. Compute virality risk (async — LLM scoring with keyword fallback)
+    const viralityRisk = await computeViralityRisk(cleanedText, versionsWithCredibility);
 
     return { versions: versionsWithCredibility, graph, viralityRisk };
   };

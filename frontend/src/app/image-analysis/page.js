@@ -46,13 +46,33 @@ export default function ImageAnalysisPage() {
     formData.append('image', file);
 
     try {
-      const resp = await fetch('http://localhost:3003/api/analyze-image', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await resp.json();
-      if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
-      setResult(data);
+      const candidates = [
+        process.env.NEXT_PUBLIC_IMAGE_ANALYZER_URL,
+        'http://localhost:3003',
+        'http://localhost:3004',
+        'http://localhost:3005',
+        'http://localhost:3006',
+      ].filter(Boolean);
+
+      let lastError = null;
+
+      for (const baseUrl of candidates) {
+        try {
+          const resp = await fetch(`${baseUrl}/api/analyze-image`, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await resp.json();
+          if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+          setResult(data);
+          lastError = null;
+          break;
+        } catch (endpointErr) {
+          lastError = endpointErr;
+        }
+      }
+
+      if (lastError) throw lastError;
     } catch (err) {
       setError(typeof err.message === 'object' ? JSON.stringify(err.message) : err.message);
     } finally {
@@ -61,7 +81,7 @@ export default function ImageAnalysisPage() {
   }
 
   const verdict = result ? (VERDICT_STYLES[result.content_verdict] || VERDICT_STYLES.INCONCLUSIVE) : null;
-  const isAI = result?.is_ai_generated;
+  const isFakeImage = result?.image_verdict === 'FAKE_OR_DERIVED' || result?.is_ai_generated;
 
   return (
     <div className="min-h-screen bg-[#0e1322] flex">
@@ -164,18 +184,18 @@ export default function ImageAnalysisPage() {
                 <div
                   className="rounded-[12px] px-[20px] py-[16px] border flex flex-col gap-[4px]"
                   style={{
-                    background: isAI ? '#2d0f0f' : '#0f2d1f',
-                    borderColor: isAI ? '#e53e3e' : '#1d9e75',
+                    background: isFakeImage ? '#2d0f0f' : '#0f2d1f',
+                    borderColor: isFakeImage ? '#e53e3e' : '#1d9e75',
                   }}
                 >
-                  <span className="text-[9.6px] tracking-[0.96px] uppercase" style={{ color: isAI ? '#fc8181' : '#4ade80', opacity: 0.7 }}>
-                    AI Detection
+                  <span className="text-[9.6px] tracking-[0.96px] uppercase" style={{ color: isFakeImage ? '#fc8181' : '#4ade80', opacity: 0.7 }}>
+                    Image Authenticity
                   </span>
-                  <span className="font-bold text-[18px]" style={{ color: isAI ? '#fc8181' : '#4ade80' }}>
-                    {isAI ? 'AI Generated' : 'Real Photo'}
+                  <span className="font-bold text-[18px]" style={{ color: isFakeImage ? '#fc8181' : '#4ade80' }}>
+                    {isFakeImage ? 'Fake / Derived Image' : 'Real Original Photo'}
                   </span>
-                  <span className="text-[12px]" style={{ color: isAI ? '#fc8181' : '#4ade80', opacity: 0.75 }}>
-                    Confidence: {result.ai_confidence ?? '—'}%
+                  <span className="text-[12px]" style={{ color: isFakeImage ? '#fc8181' : '#4ade80', opacity: 0.75 }}>
+                    Confidence: {result.image_confidence ?? result.ai_confidence ?? '—'}%
                   </span>
                 </div>
 
@@ -198,8 +218,8 @@ export default function ImageAnalysisPage() {
 
               {/* AI Reasoning */}
               <div className="bg-[#161b2b] border border-[rgba(66,71,84,0.3)] rounded-[12px] px-[24px] py-[20px]">
-                <p className="text-[9.6px] tracking-[0.96px] uppercase text-[#8c909f] mb-[10px]">AI Detection Reasoning</p>
-                <p className="text-[14px] text-[#cbd5e1] leading-[1.6]">{result.ai_reasoning}</p>
+                <p className="text-[9.6px] tracking-[0.96px] uppercase text-[#8c909f] mb-[10px]">Image Authenticity Reasoning</p>
+                <p className="text-[14px] text-[#cbd5e1] leading-[1.6]">{result.image_reasoning || result.ai_reasoning}</p>
               </div>
 
               {/* Content Summary */}

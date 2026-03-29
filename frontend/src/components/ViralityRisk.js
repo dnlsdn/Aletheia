@@ -41,50 +41,58 @@ function scoreColor(score) {
 }
 
 // SVG half-circle arc gauge
-// The arc runs from 180° (left) to 0° (right), i.e. a top semicircle.
-// cx=70, cy=70, r=56 — the flat edge sits at y=70, leaving room for the number below.
+// Fixed coordinate space: viewBox "0 0 140 78"
+// cx=70, cy=70, r=56 → arc endpoints at y=70, top of arc at y=14
+// strokeWidth=8 → needs ~4px padding → top clip at y≈10, bottom at y≈74 → 78px height
 function ArcGauge({ score, color }) {
   const cx = 70, cy = 70, r = 56;
-  // Arc from left (180°) to right (0°) — angles in standard math coords
+
   const toRad = (deg) => (deg * Math.PI) / 180;
   const ptOnArc = (angleDeg) => {
     const a = toRad(angleDeg);
     return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) };
   };
 
-  // Background arc: full 180° (left → right)
-  const bgStart = ptOnArc(180);
-  const bgEnd   = ptOnArc(0);
-  const bgPath  = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 0 1 ${bgEnd.x} ${bgEnd.y}`;
+  const bgStart  = ptOnArc(180);
+  const bgEnd    = ptOnArc(0);
+  const bgPath   = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 0 1 ${bgEnd.x} ${bgEnd.y}`;
 
-  // Foreground arc: 0..score mapped to 180..0°
   const fgAngle = 180 - (score / 100) * 180;
   const fgEnd   = ptOnArc(fgAngle);
-  const largeArc = score > 50 ? 1 : 0;
-  const fgPath  = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 ${largeArc} 1 ${fgEnd.x} ${fgEnd.y}`;
+  // largeArc is always 0: the foreground arc is always ≤ 180° within the semicircle
+  const fgPath  = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 0 1 ${fgEnd.x} ${fgEnd.y}`;
 
   return (
-    <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Background track */}
-      <path d={bgPath} stroke="#2f3445" strokeWidth="10" strokeLinecap="round" />
-      {/* Foreground fill */}
-      {score > 0 && (
-        <path d={fgPath} stroke={color} strokeWidth="10" strokeLinecap="round" />
-      )}
-      {/* Score number */}
-      <text
-        x={cx}
-        y={cy + 14}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill={color}
-        fontSize="32"
-        fontWeight="bold"
-        fontFamily="inherit"
+    <div style={{ position: 'relative', width: 140, height: 114 }}>
+      {/* Arc — only the top semicircle, clipped at y=78 */}
+      <svg
+        width={140}
+        height={78}
+        viewBox="0 0 140 78"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ display: 'block' }}
       >
+        <path d={bgPath} stroke="#2f3445" strokeWidth="8" strokeLinecap="round" />
+        {score > 0 && (
+          <path d={fgPath} stroke={color} strokeWidth="8" strokeLinecap="round" />
+        )}
+      </svg>
+      {/* Score number as HTML — avoids SVG font-rendering inconsistencies */}
+      <div style={{
+        position: 'absolute',
+        top: 78,
+        left: 0,
+        right: 0,
+        textAlign: 'left',
+        color,
+        fontSize: '32px',
+        fontWeight: 'bold',
+        lineHeight: '36px',
+      }}>
         {score}
-      </text>
-    </svg>
+      </div>
+    </div>
   );
 }
 
@@ -138,7 +146,7 @@ export default function ViralityRisk({ viralityRisk, verdictColor }) {
       {/* Arc gauge + risk label */}
       <div>
         <ArcGauge score={animatedScore} color={color} />
-        <p className="text-[15px] text-[#dee1f7] leading-[22px] mt-[8px]">{label}</p>
+        <p className="text-[15px] text-[#dee1f7] leading-[22px] mt-[12px]">{label}</p>
       </div>
 
       {/* Explanation */}

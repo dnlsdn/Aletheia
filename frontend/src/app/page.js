@@ -256,7 +256,7 @@ export default function Home() {
         {/* Top header */}
         <header className="bg-[#0e1322] px-[32px] py-[16px] flex items-center justify-between border-b border-[rgba(66,71,84,0.1)] sticky top-0 z-10">
           <div>
-            <h1 className="font-bold text-[24px] text-white tracking-[-0.6px] leading-[32px]">Alethe-ia</h1>
+            <h1 className="font-bold text-[24px] text-white tracking-[-0.6px] leading-[32px]">Alethe-IA</h1>
             <p className="text-[12px] tracking-[1.2px] uppercase text-[#c2c6d6] leading-[16px]">
               Truth Engine: Disinformation analysis system
             </p>

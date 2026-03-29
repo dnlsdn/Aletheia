@@ -111,36 +111,35 @@ function SimilarityBar({ v, expanded, onToggle, mounted, rowIndex }) {
         }}
       >
         {/* Domain label */}
-        <div style={{ width: 140, flexShrink: 0 }}>
+        <div style={{ width: 140, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span
             style={{
               fontFamily: 'monospace',
               fontSize: 11,
+              lineHeight: '16px',
               color: isSource ? '#1D9E75' : '#adc6ff',
               whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
             }}
           >
             {truncate(v.domain, 20)}
-            {isSource && (
-              <span
-                style={{
-                  fontSize: 9,
-                  fontFamily: 'sans-serif',
-                  fontWeight: 700,
-                  background: '#1D9E75',
-                  color: '#fff',
-                  borderRadius: 3,
-                  padding: '1px 5px',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                ORIGINAL
-              </span>
-            )}
           </span>
+          {isSource && (
+            <span
+              style={{
+                fontSize: 9,
+                fontFamily: 'sans-serif',
+                fontWeight: 700,
+                background: '#1D9E75',
+                color: '#fff',
+                borderRadius: 3,
+                padding: '1px 5px',
+                letterSpacing: '0.5px',
+                flexShrink: 0,
+              }}
+            >
+              ORIGINAL
+            </span>
+          )}
         </div>
 
         {/* Bar track */}

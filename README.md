@@ -1,6 +1,6 @@
-# ALETHE-IA
+# ALETHE-IA - First Place Hackathon Codemotion Rheinmetall Challenge
 
-> Fact Checking analysis platform — Codemotion Rome AI Tech Week 2026 Rheinmetall Challenge First Place
+> Fact Checking analysis platform — Codemotion Rome AI Tech Week 2026 Rheinmetall Challenge
 
 ALETHE-IA analyzes a news story across three axes in parallel:
 1. **Is it true?** — adversarial AI debate (Prosecutor vs Defender) with a final Judge

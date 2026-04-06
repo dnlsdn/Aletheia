@@ -4,8 +4,13 @@
 
 ALETHE-IA analyzes a news story across three axes in parallel:
 1. **Is it true?** — adversarial AI debate (Prosecutor vs Defender) with a final Judge
+<img width="1426" height="765" alt="image" src="https://github.com/user-attachments/assets/a3dea435-647d-4778-b29c-eb71e9318dbe" />
 2. **How did it mutate?** — multi-source mutation tracking with semantic similarity
+<img width="823" height="574" alt="image" src="https://github.com/user-attachments/assets/5f0831fd-f6c4-44c5-95c3-a1bc410d999d" />
 3. **Why do we believe it?** — rhetorical vulnerability scores and virality risk
+<img width="548" height="587" alt="image" src="https://github.com/user-attachments/assets/79968919-f3f0-4fa6-a97f-d814b83592ac" />
+
+
 
 ## Architecture
 
